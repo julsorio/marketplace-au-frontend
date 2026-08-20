@@ -15,6 +15,20 @@ export const routes: Routes = [
     loadComponent: () => import('./features/listings/listing-list/listing-list').then(m => m.ListingList)
   },
   {
+    path: 'listings/new',
+    loadComponent: () => import('./features/listings/listing-form/listing-form').then(m => m.ListingForm),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'listings/:id/edit',
+    loadComponent: () => import('./features/listings/listing-form/listing-form').then(m => m.ListingForm),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'listings/:id',
+    loadComponent: () => import('./features/listings/listing-detail/listing-detail').then(m => m.ListingDetail)
+  },
+  {
     path: '',
     redirectTo: 'listings',
     pathMatch: 'full'

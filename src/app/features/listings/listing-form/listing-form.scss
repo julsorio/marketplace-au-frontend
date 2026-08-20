@@ -1,0 +1,34 @@
+.form-page {
+  padding: 24px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
+.submit-row {
+  margin-top: 24px;
+}
+
+.back-button {
+  margin-bottom: 16px;
+}
