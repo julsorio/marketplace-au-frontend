@@ -1,0 +1,61 @@
+<div class="register-container">
+  <mat-card class="register-card">
+    <mat-card-header>
+      <mat-card-title>Crear cuenta</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="displayName" />
+          @if (form.get('displayName')?.hasError('required') && form.get('displayName')?.touched) {
+            <mat-error>El nombre es obligatorio</mat-error>
+          }
+          @if (form.get('displayName')?.hasError('minlength') && form.get('displayName')?.touched) {
+            <mat-error>Mínimo 2 caracteres</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" />
+          @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+            <mat-error>El email es obligatorio</mat-error>
+          }
+          @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+            <mat-error>Email no válido</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Teléfono (opcional)</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <input matInput type="password" formControlName="password" />
+          @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
+            <mat-error>La contraseña es obligatoria</mat-error>
+          }
+          @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
+            <mat-error>Mínimo 8 caracteres</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            <span>Crear cuenta</span>
+          }
+        </button>
+      </form>
+
+      <p class="login-link">
+        ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+      </p>
+    </mat-card-content>
+  </mat-card>
+</div>
