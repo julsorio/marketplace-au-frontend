@@ -1,0 +1,70 @@
+<div class="detail-page">
+  <button mat-button routerLink="/listings" class="back-button">
+    <mat-icon>arrow_back</mat-icon>
+    Volver al listado
+  </button>
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (notFound()) {
+    <p class="not-found">Este anuncio no existe o ya no está disponible.</p>
+  } @else if (listing(); as l) {
+    <div class="detail-grid">
+      <div class="images-section">
+        @if (l.images.length > 0) {
+          <img class="main-image" [src]="l.images[selectedImageIndex()]" [alt]="l.title" />
+          @if (l.images.length > 1) {
+            <div class="thumbnails">
+              @for (img of l.images; track img; let i = $index) {
+                <img
+                  [src]="img"
+                  [class.active]="i === selectedImageIndex()"
+                  (click)="selectImage(i)"
+                  [alt]="l.title + ' ' + (i + 1)"
+                />
+              }
+            </div>
+          }
+        } @else {
+          <div class="no-image">
+            <mat-icon>image</mat-icon>
+          </div>
+        }
+      </div>
+
+      <div class="info-section">
+        <h1>{{ l.title }}</h1>
+        <p class="price">{{ formatPrice() }}</p>
+        @if (l.negotiable) {
+          <mat-chip>Precio negociable</mat-chip>
+        }
+
+        <div class="meta">
+          <mat-chip>{{ l.condition }}</mat-chip>
+          <span class="location">
+            <mat-icon>place</mat-icon>
+            {{ l.suburb }}, {{ l.state }}
+          </span>
+        </div>
+
+        <h3>Descripción</h3>
+        <p class="description">{{ l.description }}</p>
+
+        <p class="views">{{ l.views }} visualizaciones</p>
+
+        @if (isOwner()) {
+          <div class="owner-actions">
+            <button mat-raised-button color="primary" [routerLink]="['/listings', l.id, 'edit']">Editar</button>
+            <button mat-stroked-button color="warn" (click)="onDelete()">Eliminar</button>
+          </div>
+        } @else {
+          <button mat-raised-button color="primary" class="contact-button">
+            <mat-icon>chat</mat-icon>
+            Contactar al vendedor
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>

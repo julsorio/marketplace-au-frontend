@@ -1,0 +1,19 @@
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.menu-user-info {
+  padding: 8px 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}

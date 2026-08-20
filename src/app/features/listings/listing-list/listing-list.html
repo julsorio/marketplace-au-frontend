@@ -1,0 +1,66 @@
+<div class="listing-page">
+  <form [formGroup]="filterForm" class="filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar</mat-label>
+      <input matInput formControlName="query" placeholder="iPhone, sofá, Toyota..." />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Categoría</mat-label>
+      <mat-select formControlName="category">
+        <mat-option value="">Todas</mat-option>
+        @for (cat of categories(); track cat.id) {
+          <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Condición</mat-label>
+      <mat-select formControlName="condition">
+        <mat-option value="">Cualquiera</mat-option>
+        @for (c of conditions; track c) {
+          <mat-option [value]="c">{{ c }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Precio mín.</mat-label>
+      <input matInput type="number" formControlName="minPrice" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Precio máx.</mat-label>
+      <input matInput type="number" formControlName="maxPrice" />
+    </mat-form-field>
+  </form>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (!hasResults()) {
+    <p class="no-results">No se encontraron anuncios con esos filtros.</p>
+  } @else {
+    <div class="listing-grid">
+      @for (listing of listings(); track listing.id) {
+        <mat-card class="listing-card" [routerLink]="['/listings', listing.id]">
+          @if (listing.images.length > 0) {
+            <img mat-card-image [src]="listing.images[0]" [alt]="listing.title" />
+          } @else {
+            <div class="no-image">
+              <mat-icon>image</mat-icon>
+            </div>
+          }
+          <mat-card-content>
+            <h3>{{ listing.title }}</h3>
+            <p class="price">{{ formatPrice(listing) }}</p>
+            <p class="location">{{ listing.suburb }}, {{ listing.state }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>
