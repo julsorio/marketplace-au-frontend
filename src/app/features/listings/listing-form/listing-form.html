@@ -48,15 +48,19 @@
             <mat-form-field appearance="outline">
               <mat-label>Categoría</mat-label>
               <mat-select formControlName="category">
-                <mat-option value="electronics">Electrónica</mat-option>
-                <mat-option value="vehicles">Vehículos</mat-option>
-                <mat-option value="furniture">Muebles</mat-option>
+                @for (cat of categories(); track cat.id) {
+                  <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+                }
               </mat-select>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
               <mat-label>Subcategoría</mat-label>
-              <input matInput formControlName="subcategory" />
+              <mat-select formControlName="subcategory">
+                @for (sub of availableSubcategories(); track sub.id) {
+                  <mat-option [value]="sub.id">{{ sub.name }}</mat-option>
+                }
+              </mat-select>
             </mat-form-field>
           </div>
 

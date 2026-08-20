@@ -1,0 +1,32 @@
+<mat-toolbar color="primary">
+  <a routerLink="/listings" class="brand">
+    <mat-icon>storefront</mat-icon>
+    <span>Marketplace AU</span>
+  </a>
+
+  <span class="spacer"></span>
+
+  @if (authService.isAuthenticated()) {
+    <button mat-raised-button color="accent" routerLink="/listings/new">
+      <mat-icon>add</mat-icon>
+      Publicar
+    </button>
+
+    <button mat-icon-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+
+    <mat-menu #userMenu="matMenu">
+      <div class="menu-user-info">
+        {{ authService.currentUser()?.displayName }}
+      </div>
+      <button mat-menu-item (click)="onLogout()">
+        <mat-icon>logout</mat-icon>
+        <span>Cerrar sesión</span>
+      </button>
+    </mat-menu>
+  } @else {
+    <button mat-button routerLink="/login">Iniciar sesión</button>
+    <button mat-raised-button color="accent" routerLink="/register">Registrarse</button>
+  }
+</mat-toolbar>

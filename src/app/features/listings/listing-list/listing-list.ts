@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { ListingService } from '../../../core/services/listing.service';
 import { ListingResponse, LISTING_CONDITIONS } from '../../../core/models/listing.model';
+import { CategoryService } from '../../../core/services/category.service';
 
 @Component({
   selector: 'app-listing-list',
@@ -35,12 +36,14 @@ import { ListingResponse, LISTING_CONDITIONS } from '../../../core/models/listin
 export class ListingList {
   private readonly listingService = inject(ListingService);
   private readonly fb = inject(FormBuilder);
+  private readonly categoryService = inject(CategoryService);
 
   readonly conditions = LISTING_CONDITIONS;
 
   readonly listings = signal<ListingResponse[]>([]);
   readonly isLoading = signal(true);
   readonly hasResults = computed(() => this.listings().length > 0);
+  readonly categories = this.categoryService.categories;
 
   readonly filterForm = this.fb.group({
     query: [''],
@@ -51,6 +54,7 @@ export class ListingList {
   });
 
   constructor() {
+    this.categoryService.loadCategories();
     this.search();
 
     this.filterForm.valueChanges

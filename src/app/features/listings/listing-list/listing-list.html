@@ -10,9 +10,9 @@
       <mat-label>Categoría</mat-label>
       <mat-select formControlName="category">
         <mat-option value="">Todas</mat-option>
-        <mat-option value="electronics">Electrónica</mat-option>
-        <mat-option value="vehicles">Vehículos</mat-option>
-        <mat-option value="furniture">Muebles</mat-option>
+        @for (cat of categories(); track cat.id) {
+          <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
 

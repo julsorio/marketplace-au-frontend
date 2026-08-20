@@ -13,6 +13,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ListingService } from '../../../core/services/listing.service';
 import { LISTING_CONDITIONS } from '../../../core/models/listing.model';
+import { CategoryService } from '../../../core/services/category.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-listing-form',
@@ -38,6 +40,7 @@ export class ListingForm implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly listingService = inject(ListingService);
+  private readonly categoryService = inject(CategoryService);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly conditions = LISTING_CONDITIONS;
@@ -45,6 +48,7 @@ export class ListingForm implements OnInit {
   readonly isSubmitting = signal(false);
   readonly listingId = signal<string | null>(null);
   readonly isEditMode = computed(() => this.listingId() !== null);
+  readonly categories = this.categoryService.categories;
 
   readonly form = this.fb.group({
     title: ['', [Validators.required, Validators.minLength(3)]],
@@ -61,12 +65,23 @@ export class ListingForm implements OnInit {
     images: this.fb.array<string>([])
   });
 
+  private readonly selectedCategoryId = toSignal(
+    this.form.get('category')!.valueChanges, {initialValue: ''}
+  )
+  
+  readonly availableSubcategories = computed(() => {
+    const categoryId = this.selectedCategoryId();
+    return categoryId ? this.categoryService.getSubcategories(categoryId) : [];
+  })
+
   get imagesArray(): FormArray {
     return this.form.get('images') as FormArray;
   }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
+    this.categoryService.loadCategories();
+    
     if (id) {
       this.listingId.set(id);
       this.form.get('latitude')?.clearValidators();
