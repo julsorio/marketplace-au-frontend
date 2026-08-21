@@ -1,0 +1,85 @@
+.thread-page {
+  padding: 24px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.back-button {
+  margin-bottom: 16px;
+}
+
+.thread-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 8px 4px;
+  margin-bottom: 8px;
+}
+
+.no-messages {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
+
+.message-row {
+  display: flex;
+
+  &.mine {
+    justify-content: flex-end;
+
+    .message-bubble {
+      background: #1a73e8;
+      color: white;
+
+      .message-time {
+        color: rgba(255, 255, 255, 0.75);
+      }
+    }
+  }
+}
+
+.message-bubble {
+  max-width: 75%;
+  background: #f0f0f0;
+  border-radius: 12px;
+  padding: 8px 12px;
+
+  p {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
+.message-time {
+  display: block;
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 2px;
+  text-align: right;
+}
+
+.send-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .full-width {
+    flex: 1;
+    margin-bottom: -1.25em;
+  }
+}

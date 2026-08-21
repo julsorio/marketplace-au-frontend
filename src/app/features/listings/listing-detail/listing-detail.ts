@@ -103,7 +103,13 @@ export class ListingDetail implements OnInit {
       return;
     }
 
-    // TODO: iniciar/abrir la conversación con el vendedor cuando el módulo de
-    // conversaciones esté conectado en el frontend (el backend ya lo soporta)
+    const l = this.listing();
+    if (!l) return;
+
+    // No hay conversación todavía: se crea en el backend con el primer mensaje.
+    // ConversationThread lee listingId/recipientId de los query params en ese caso.
+    this.router.navigate(['/conversations/new'], {
+      queryParams: { listingId: l.id, recipientId: l.sellerId }
+    });
   }
 }
