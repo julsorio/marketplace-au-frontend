@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ListingService } from '../../../core/services/listing.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ListingResponse } from '../../../core/models/listing.model';
+import { LocationMapView } from '../../../shared/components/location-map-view/location-map-view';
 
 @Component({
   selector: 'app-listing-detail',
@@ -21,7 +22,8 @@ import { ListingResponse } from '../../../core/models/listing.model';
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    LocationMapView
   ],
   templateUrl: './listing-detail.html',
   styleUrl: './listing-detail.scss'
@@ -89,5 +91,19 @@ export class ListingDetail implements OnInit {
         this.snackBar.open('Error al eliminar el anuncio', 'Cerrar', { duration: 4000 });
       }
     });
+  }
+
+  onContactSeller(): void {
+    if (!this.authService.isAuthenticated()) {
+      const returnUrl = this.router.url;
+      this.snackBar
+        .open('Debes iniciar sesión para contactar al vendedor', 'Iniciar sesión', { duration: 5000 })
+        .onAction()
+        .subscribe(() => this.router.navigate(['/login'], { queryParams: { returnUrl } }));
+      return;
+    }
+
+    // TODO: iniciar/abrir la conversación con el vendedor cuando el módulo de
+    // conversaciones esté conectado en el frontend (el backend ya lo soporta)
   }
 }

@@ -35,7 +35,8 @@
       </form>
 
       <p class="register-link">
-        ¿No tienes cuenta? <a routerLink="/register">Regístrate</a>
+        ¿No tienes cuenta?
+        <a routerLink="/register" [queryParams]="returnUrl ? { returnUrl } : {}">Regístrate</a>
       </p>
     </mat-card-content>
   </mat-card>

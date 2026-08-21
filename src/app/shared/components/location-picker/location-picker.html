@@ -1,0 +1,34 @@
+<div class="location-picker">
+  <div class="search-row">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Buscar dirección o suburbio</mat-label>
+      <input matInput [(ngModel)]="query" (keyup.enter)="search()" placeholder="Ej: Bondi Beach, NSW" />
+    </mat-form-field>
+    <button mat-stroked-button type="button" (click)="search()" [disabled]="searching()">
+      @if (searching()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        <mat-icon>search</mat-icon>
+      }
+    </button>
+  </div>
+
+  @if (results().length > 0) {
+    <div class="results-list">
+      @for (result of results(); track result.displayName) {
+        <button type="button" class="result-item" (click)="selectResult(result)">
+          {{ result.displayName }}
+        </button>
+      }
+    </div>
+  }
+
+  @if (selectedAddress()) {
+    <p class="selected-address">
+      <mat-icon>place</mat-icon> {{ selectedAddress() }}
+    </p>
+  }
+
+  <div #mapContainer class="map-container"></div>
+  <p class="map-hint">Haz clic en el mapa o arrastra el pin para ajustar la ubicación exacta.</p>
+</div>

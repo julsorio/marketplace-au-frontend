@@ -35,7 +35,32 @@
       <mat-label>Precio máx.</mat-label>
       <input matInput type="number" formControlName="maxPrice" />
     </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Ubicación</mat-label>
+      <input matInput formControlName="locationQuery" placeholder="Suburbio o dirección..." />
+      @if (isGeocoding()) {
+        <mat-spinner matSuffix diameter="18"></mat-spinner>
+      } @else {
+        <mat-icon matSuffix>place</mat-icon>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Radio</mat-label>
+      <mat-select formControlName="radiusKm" [disabled]="!resolvedLocation()">
+        @for (r of radiusOptions; track r) {
+          <mat-option [value]="r">{{ r }} km</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
   </form>
+
+  @if (resolvedLocation()) {
+    <p class="resolved-location">
+      <mat-icon>place</mat-icon> Buscando cerca de: {{ resolvedLocation()!.label }}
+    </p>
+  }
 
   @if (isLoading()) {
     <div class="loading-container">

@@ -86,17 +86,14 @@
               </mat-form-field>
             </div>
 
-            <div class="row">
-              <mat-form-field appearance="outline">
-                <mat-label>Latitud</mat-label>
-                <input matInput type="number" formControlName="latitude" />
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Longitud</mat-label>
-                <input matInput type="number" formControlName="longitude" />
-              </mat-form-field>
-            </div>
+            <h3>Ubicación</h3>
+            <app-location-picker
+              [initialLatitude]="form.controls.latitude.value"
+              [initialLongitude]="form.controls.longitude.value"
+              (locationChange)="onLocationPicked($event)" />
+            @if (form.get('latitude')?.hasError('required') && form.get('latitude')?.touched) {
+              <mat-error>Selecciona una ubicación en el mapa</mat-error>
+            }
           }
 
           <h3>Imágenes (URLs)</h3>
