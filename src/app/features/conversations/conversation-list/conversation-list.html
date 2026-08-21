@@ -1,0 +1,41 @@
+<div class="conversations-page">
+  <h1>Mensajes</h1>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (conversations().length === 0) {
+    <p class="no-results">Todavía no tienes conversaciones.</p>
+  } @else {
+    <div class="conversation-list">
+      @for (item of conversations(); track item.conversation.id) {
+        <mat-card
+          class="conversation-row"
+          [class.unread]="item.conversation.unreadCount > 0"
+          [routerLink]="['/conversations', item.conversation.id]">
+          @if (item.listingThumbnail) {
+            <img class="thumbnail" [src]="item.listingThumbnail" [alt]="item.listingTitle" />
+          } @else {
+            <div class="thumbnail no-image">
+              <mat-icon>image</mat-icon>
+            </div>
+          }
+
+          <div class="conversation-info">
+            <div class="conversation-header">
+              <span class="other-participant">{{ item.otherParticipantName }}</span>
+              <span class="date">{{ formatDate(item.conversation.lastMessageSentAt) }}</span>
+            </div>
+            <p class="listing-title">{{ item.listingTitle }}</p>
+            <p class="last-message">{{ item.conversation.lastMessageText ?? 'Sin mensajes todavía' }}</p>
+          </div>
+
+          @if (item.conversation.unreadCount > 0) {
+            <span class="unread-badge">{{ item.conversation.unreadCount }}</span>
+          }
+        </mat-card>
+      }
+    </div>
+  }
+</div>

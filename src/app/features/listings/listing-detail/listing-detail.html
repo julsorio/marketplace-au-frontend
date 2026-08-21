@@ -48,6 +48,8 @@
           </span>
         </div>
 
+        <app-location-map-view [latitude]="l.latitude" [longitude]="l.longitude" />
+
         <h3>Descripción</h3>
         <p class="description">{{ l.description }}</p>
 
@@ -59,7 +61,7 @@
             <button mat-stroked-button color="warn" (click)="onDelete()">Eliminar</button>
           </div>
         } @else {
-          <button mat-raised-button color="primary" class="contact-button">
+          <button mat-raised-button color="primary" class="contact-button" (click)="onContactSeller()">
             <mat-icon>chat</mat-icon>
             Contactar al vendedor
           </button>

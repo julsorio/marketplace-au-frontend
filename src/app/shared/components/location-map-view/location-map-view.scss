@@ -1,0 +1,28 @@
+.map-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.map-container {
+  height: 250px;
+  width: 100%;
+  border-radius: 8px;
+  z-index: 0;
+}
+
+.map-disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin: 0;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}

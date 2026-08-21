@@ -29,6 +29,22 @@ export const routes: Routes = [
     loadComponent: () => import('./features/listings/listing-detail/listing-detail').then(m => m.ListingDetail)
   },
   {
+    path: 'conversations',
+    loadComponent: () => import('./features/conversations/conversation-list/conversation-list').then(m => m.ConversationList),
+    canActivate: [authGuard]
+  },
+  {
+    // Debe ir antes de 'conversations/:id' para que 'new' no se interprete como un id.
+    path: 'conversations/new',
+    loadComponent: () => import('./features/conversations/conversation-thread/conversation-thread').then(m => m.ConversationThread),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'conversations/:id',
+    loadComponent: () => import('./features/conversations/conversation-thread/conversation-thread').then(m => m.ConversationThread),
+    canActivate: [authGuard]
+  },
+  {
     path: '',
     redirectTo: 'listings',
     pathMatch: 'full'

@@ -15,6 +15,7 @@ import { ListingService } from '../../../core/services/listing.service';
 import { LISTING_CONDITIONS } from '../../../core/models/listing.model';
 import { CategoryService } from '../../../core/services/category.service';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { LocationPicker, LocationPicked } from '../../../shared/components/location-picker/location-picker';
 
 @Component({
   selector: 'app-listing-form',
@@ -30,7 +31,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
     MatButtonModule,
     MatCheckboxModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    LocationPicker
   ],
   templateUrl: './listing-form.html',
   styleUrl: './listing-form.scss'
@@ -68,7 +70,7 @@ export class ListingForm implements OnInit {
   private readonly selectedCategoryId = toSignal(
     this.form.get('category')!.valueChanges, {initialValue: ''}
   )
-  
+
   readonly availableSubcategories = computed(() => {
     const categoryId = this.selectedCategoryId();
     return categoryId ? this.categoryService.getSubcategories(categoryId) : [];
@@ -81,7 +83,7 @@ export class ListingForm implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     this.categoryService.loadCategories();
-    
+
     if (id) {
       this.listingId.set(id);
       this.form.get('latitude')?.clearValidators();
@@ -123,6 +125,23 @@ export class ListingForm implements OnInit {
 
   removeImageField(index: number): void {
     this.imagesArray.removeAt(index);
+  }
+
+  // Se dispara cuando el usuario busca una dirección, hace clic en el mapa o arrastra el pin
+  // dentro del <app-location-picker>. Solo autocompletamos suburbio/estado si el usuario aún
+  // no los ha escrito, para no pisar lo que haya introducido manualmente.
+  onLocationPicked(location: LocationPicked): void {
+    this.form.patchValue({
+      latitude: location.latitude,
+      longitude: location.longitude
+    });
+
+    if (location.suburb && !this.form.get('suburb')?.value) {
+      this.form.get('suburb')?.setValue(location.suburb);
+    }
+    if (location.state && !this.form.get('state')?.value) {
+      this.form.get('state')?.setValue(location.state);
+    }
   }
 
   onSubmit(): void {

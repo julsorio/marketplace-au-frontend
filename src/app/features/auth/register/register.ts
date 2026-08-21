@@ -1,7 +1,7 @@
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -31,9 +31,12 @@ export class Register {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly snackBar = inject(MatSnackBar);
 
   readonly isLoading = signal(false);
+
+  readonly returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
   readonly form = this.fb.group({
     displayName: ['', [Validators.required, Validators.minLength(2)]],
@@ -58,7 +61,7 @@ export class Register {
     }).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/listings']);
+        this.router.navigateByUrl(this.returnUrl ?? '/listings');
       },
       error: (err) => {
         this.isLoading.set(false);

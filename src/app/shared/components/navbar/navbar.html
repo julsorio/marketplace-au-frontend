@@ -7,6 +7,11 @@
   <span class="spacer"></span>
 
   @if (authService.isAuthenticated()) {
+    <button mat-button routerLink="/conversations">
+      <mat-icon>chat</mat-icon>
+      Mensajes
+    </button>
+
     <button mat-raised-button color="accent" routerLink="/listings/new">
       <mat-icon>add</mat-icon>
       Publicar

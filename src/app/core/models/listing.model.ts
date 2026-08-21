@@ -18,6 +18,8 @@ export interface ListingResponse {
   images: string[];
   suburb: string;
   state: string;
+  latitude: number;
+  longitude: number;
   status: string;
   views: number;
   favoritesCount: number;
