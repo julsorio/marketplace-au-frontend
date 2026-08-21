@@ -7,7 +7,18 @@
   <span class="spacer"></span>
 
   @if (authService.isAuthenticated()) {
-    <button mat-button routerLink="/conversations">
+    <button mat-button routerLink="/favorites">
+      <mat-icon>favorite</mat-icon>
+      Favoritos
+    </button>
+
+    <button
+      mat-button
+      routerLink="/conversations"
+      [matBadge]="conversationService.unreadCount()"
+      [matBadgeHidden]="conversationService.unreadCount() === 0"
+      matBadgeColor="warn"
+      matBadgeSize="small">
       <mat-icon>chat</mat-icon>
       Mensajes
     </button>

@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ListingService } from '../../../core/services/listing.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { FavoriteService } from '../../../core/services/favorite.service';
 import { ListingResponse } from '../../../core/models/listing.model';
 import { LocationMapView } from '../../../shared/components/location-map-view/location-map-view';
 
@@ -34,6 +35,7 @@ export class ListingDetail implements OnInit {
   private readonly listingService = inject(ListingService);
   private readonly authService = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
+  readonly favoriteService = inject(FavoriteService);
 
   readonly listing = signal<ListingResponse | null>(null);
   readonly isLoading = signal(true);
@@ -111,5 +113,21 @@ export class ListingDetail implements OnInit {
     this.router.navigate(['/conversations/new'], {
       queryParams: { listingId: l.id, recipientId: l.sellerId }
     });
+  }
+
+  toggleFavorite(): void {
+    const l = this.listing();
+    if (!l) return;
+
+    if (!this.authService.isAuthenticated()) {
+      const returnUrl = this.router.url;
+      this.snackBar
+        .open('Debes iniciar sesión para guardar favoritos', 'Iniciar sesión', { duration: 5000 })
+        .onAction()
+        .subscribe(() => this.router.navigate(['/login'], { queryParams: { returnUrl } }));
+      return;
+    }
+
+    this.favoriteService.toggle(l.id);
   }
 }

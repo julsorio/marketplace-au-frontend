@@ -29,6 +29,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/listings/listing-detail/listing-detail').then(m => m.ListingDetail)
   },
   {
+    path: 'favorites',
+    loadComponent: () => import('./features/favorites/favorites-list/favorites-list').then(m => m.FavoritesList),
+    canActivate: [authGuard]
+  },
+  {
     path: 'conversations',
     loadComponent: () => import('./features/conversations/conversation-list/conversation-list').then(m => m.ConversationList),
     canActivate: [authGuard]

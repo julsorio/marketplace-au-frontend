@@ -34,7 +34,16 @@
       </div>
 
       <div class="info-section">
-        <h1>{{ l.title }}</h1>
+        <div class="title-row">
+          <h1>{{ l.title }}</h1>
+          <button
+            mat-icon-button
+            class="favorite-button"
+            [class.active]="favoriteService.isFavorite(l.id)"
+            (click)="toggleFavorite()">
+            <mat-icon>{{ favoriteService.isFavorite(l.id) ? 'favorite' : 'favorite_border' }}</mat-icon>
+          </button>
+        </div>
         <p class="price">{{ formatPrice() }}</p>
         @if (l.negotiable) {
           <mat-chip>Precio negociable</mat-chip>

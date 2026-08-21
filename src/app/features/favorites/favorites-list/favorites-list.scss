@@ -1,32 +1,5 @@
-.listing-page {
+.favorites-page {
   padding: 24px;
-}
-
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
-
-  mat-form-field {
-    flex: 1;
-    min-width: 150px;
-  }
-}
-
-.resolved-location {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 0.85rem;
-  margin: -12px 0 16px;
-
-  mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-  }
 }
 
 .loading-container {
@@ -41,13 +14,13 @@
   padding: 48px;
 }
 
-.listing-grid {
+.favorites-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
 }
 
-.listing-card {
+.favorite-card {
   position: relative;
   cursor: pointer;
   transition: transform 0.2s;
@@ -57,17 +30,13 @@
   }
 }
 
-.favorite-button {
+.remove-button {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 1;
   background: rgba(255, 255, 255, 0.85);
-  color: rgba(0, 0, 0, 0.6);
-
-  &.active {
-    color: #e91e63;
-  }
+  color: #e91e63;
 }
 
 .no-image {
@@ -99,3 +68,4 @@
 .back-button {
   margin-bottom: 16px;
 }
+

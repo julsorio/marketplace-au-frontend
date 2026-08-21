@@ -12,8 +12,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { timer, of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -143,20 +143,25 @@ export class ConversationThread implements OnInit {
   // Polling en vez de WebSocket (decisión de diseño del módulo de conversaciones):
   // cada POLL_INTERVAL_MS volvemos a pedir los mensajes de la conversación mientras el
   // componente esté vivo; takeUntilDestroyed corta el polling al salir de la pantalla.
+  //
+  // catchError va DENTRO del switchMap (no en el subscribe): un error en getMessages() sin
+  // capturar se propaga por el switchMap y termina todo el observable, incluido el timer —
+  // el polling se paraba para siempre tras un solo fallo puntual de red, hasta salir y volver
+  // a entrar a la conversación. Con el error atrapado aquí, ese tick se salta (se conservan
+  // los mensajes que ya había) y el timer sigue emitiendo con normalidad en el siguiente ciclo.
   private startPolling(conversationId: string): void {
     timer(0, POLL_INTERVAL_MS)
       .pipe(
-        switchMap(() => this.conversationService.getMessages(conversationId)),
+        switchMap(() =>
+          this.conversationService.getMessages(conversationId).pipe(catchError(() => of(null)))
+        ),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe({
-        next: (messages) => {
+      .subscribe((messages) => {
+        if (messages !== null) {
           this.messages.set(messages);
-          this.isLoading.set(false);
-        },
-        error: () => {
-          this.isLoading.set(false);
         }
+        this.isLoading.set(false);
       });
   }
 
