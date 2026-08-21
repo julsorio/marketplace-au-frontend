@@ -1,0 +1,38 @@
+<div class="favorites-page">
+  <button mat-button routerLink="/listings" class="back-button">
+    <mat-icon>arrow_back</mat-icon>
+    Volver al listado
+  </button>
+
+  <h1>Mis favoritos</h1>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (favorites().length === 0) {
+    <p class="no-results">Todavía no has guardado ningún anuncio como favorito.</p>
+  } @else {
+    <div class="favorites-grid">
+      @for (item of favorites(); track item.listing.id) {
+        <mat-card class="favorite-card" [routerLink]="['/listings', item.listing.id]">
+          <button mat-icon-button class="remove-button" (click)="onRemove(item.listing.id, $event)">
+            <mat-icon>favorite</mat-icon>
+          </button>
+          @if (item.listing.images.length > 0) {
+            <img mat-card-image [src]="item.listing.images[0]" [alt]="item.listing.title" />
+          } @else {
+            <div class="no-image">
+              <mat-icon>image</mat-icon>
+            </div>
+          }
+          <mat-card-content>
+            <h3>{{ item.listing.title }}</h3>
+            <p class="price">{{ formatPrice(item) }}</p>
+            <p class="location">{{ item.listing.suburb }}, {{ item.listing.state }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

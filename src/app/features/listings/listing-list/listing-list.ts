@@ -1,7 +1,7 @@
 import { Component, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
@@ -16,6 +16,8 @@ import { ListingService } from '../../../core/services/listing.service';
 import { ListingResponse, LISTING_CONDITIONS } from '../../../core/models/listing.model';
 import { CategoryService } from '../../../core/services/category.service';
 import { GeocodingService } from '../../../core/services/geocoding.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { FavoriteService } from '../../../core/services/favorite.service';
 
 interface ResolvedLocation {
   latitude: number;
@@ -49,6 +51,9 @@ export class ListingList {
   private readonly fb = inject(FormBuilder);
   private readonly categoryService = inject(CategoryService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  readonly favoriteService = inject(FavoriteService);
 
   readonly conditions = LISTING_CONDITIONS;
   readonly radiusOptions = RADIUS_OPTIONS;
@@ -158,5 +163,22 @@ export class ListingList {
 
   formatPrice(listing: ListingResponse): string {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: listing.currency }).format(listing.price);
+  }
+
+  // event.stopPropagation() evita que el click en el corazón también dispare la navegación
+  // al detalle (la tarjeta entera tiene [routerLink]).
+  toggleFavorite(listing: ListingResponse, event: Event): void {
+    event.stopPropagation();
+
+    if (!this.authService.isAuthenticated()) {
+      const returnUrl = this.router.url;
+      this.snackBar
+        .open('Debes iniciar sesión para guardar favoritos', 'Iniciar sesión', { duration: 5000 })
+        .onAction()
+        .subscribe(() => this.router.navigate(['/login'], { queryParams: { returnUrl } }));
+      return;
+    }
+
+    this.favoriteService.toggle(listing.id);
   }
 }

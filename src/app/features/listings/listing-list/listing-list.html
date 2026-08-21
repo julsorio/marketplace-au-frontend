@@ -72,6 +72,13 @@
     <div class="listing-grid">
       @for (listing of listings(); track listing.id) {
         <mat-card class="listing-card" [routerLink]="['/listings', listing.id]">
+          <button
+            mat-icon-button
+            class="favorite-button"
+            [class.active]="favoriteService.isFavorite(listing.id)"
+            (click)="toggleFavorite(listing, $event)">
+            <mat-icon>{{ favoriteService.isFavorite(listing.id) ? 'favorite' : 'favorite_border' }}</mat-icon>
+          </button>
           @if (listing.images.length > 0) {
             <img mat-card-image [src]="listing.images[0]" [alt]="listing.title" />
           } @else {

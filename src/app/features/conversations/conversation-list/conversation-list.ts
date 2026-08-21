@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin, of, Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ConversationService } from '../../../core/services/conversation.service';
@@ -26,6 +27,7 @@ interface ConversationView {
     CommonModule,
     RouterLink,
     MatCardModule,
+    MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule
   ],
