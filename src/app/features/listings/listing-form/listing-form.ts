@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ListingService } from '../../../core/services/listing.service';
-import { LISTING_CONDITIONS } from '../../../core/models/listing.model';
+import { LISTING_CONDITIONS, LISTING_DELIVERY_METHODS, DELIVERY_METHOD_LABELS } from '../../../core/models/listing.model';
 import { CategoryService } from '../../../core/services/category.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LocationPicker, LocationPicked } from '../../../shared/components/location-picker/location-picker';
@@ -46,6 +46,8 @@ export class ListingForm implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly conditions = LISTING_CONDITIONS;
+  readonly deliveryMethods = LISTING_DELIVERY_METHODS;
+  readonly deliveryMethodLabels = DELIVERY_METHOD_LABELS;
   readonly isLoading = signal(false);
   readonly isSubmitting = signal(false);
   readonly listingId = signal<string | null>(null);
@@ -60,6 +62,7 @@ export class ListingForm implements OnInit {
     category: ['', Validators.required],
     subcategory: [''],
     condition: ['', Validators.required],
+    deliveryMethod: ['in_person', Validators.required],
     suburb: ['', Validators.required],
     state: ['', Validators.required],
     latitude: [null as number | null, Validators.required],
@@ -70,7 +73,7 @@ export class ListingForm implements OnInit {
   private readonly selectedCategoryId = toSignal(
     this.form.get('category')!.valueChanges, {initialValue: ''}
   )
-
+  
   readonly availableSubcategories = computed(() => {
     const categoryId = this.selectedCategoryId();
     return categoryId ? this.categoryService.getSubcategories(categoryId) : [];
@@ -83,7 +86,7 @@ export class ListingForm implements OnInit {
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     this.categoryService.loadCategories();
-
+    
     if (id) {
       this.listingId.set(id);
       this.form.get('latitude')?.clearValidators();
@@ -106,6 +109,7 @@ export class ListingForm implements OnInit {
           category: listing.category,
           subcategory: listing.subcategory,
           condition: listing.condition,
+          deliveryMethod: listing.deliveryMethod,
           suburb: listing.suburb,
           state: listing.state
         });
@@ -163,6 +167,7 @@ export class ListingForm implements OnInit {
         category: value.category!,
         subcategory: value.subcategory!,
         condition: value.condition!,
+        deliveryMethod: value.deliveryMethod!,
         attributes: {},
         images
       }).subscribe({
@@ -185,6 +190,7 @@ export class ListingForm implements OnInit {
         category: value.category!,
         subcategory: value.subcategory!,
         condition: value.condition!,
+        deliveryMethod: value.deliveryMethod!,
         attributes: {},
         images,
         latitude: value.latitude!,

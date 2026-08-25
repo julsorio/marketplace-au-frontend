@@ -73,6 +73,18 @@
             </mat-select>
           </mat-form-field>
 
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Método de entrega</mat-label>
+            <mat-select formControlName="deliveryMethod">
+              @for (m of deliveryMethods; track m) {
+                <mat-option [value]="m">{{ deliveryMethodLabels[m] }}</mat-option>
+              }
+            </mat-select>
+            @if (form.get('deliveryMethod')?.hasError('required') && form.get('deliveryMethod')?.touched) {
+              <mat-error>Indica cómo entregas el artículo</mat-error>
+            }
+          </mat-form-field>
+
           @if (!isEditMode()) {
             <div class="row">
               <mat-form-field appearance="outline">
@@ -88,8 +100,8 @@
 
             <h3>Ubicación</h3>
             <app-location-picker
-              [initialLatitude]="form.controls.latitude.value"
-              [initialLongitude]="form.controls.longitude.value"
+              [initialLatitude]="form.value.latitude ?? null"
+              [initialLongitude]="form.value.longitude ?? null"
               (locationChange)="onLocationPicked($event)" />
             @if (form.get('latitude')?.hasError('required') && form.get('latitude')?.touched) {
               <mat-error>Selecciona una ubicación en el mapa</mat-error>

@@ -19,7 +19,7 @@ import { FavoriteService } from '../../../core/services/favorite.service';
 import { ConversationService } from '../../../core/services/conversation.service';
 import { UserService } from '../../../core/services/user.service';
 import { TransactionService } from '../../../core/services/transaction.service';
-import { ListingResponse } from '../../../core/models/listing.model';
+import { ListingResponse, DELIVERY_METHOD_LABELS } from '../../../core/models/listing.model';
 import { TransactionResponse } from '../../../core/models/transaction.model';
 import { UserPublicProfile } from '../../../core/models/user.model';
 import { LocationMapView } from '../../../shared/components/location-map-view/location-map-view';
@@ -103,6 +103,11 @@ export class ListingDetail implements OnInit {
   readonly statusLabel = computed(() => {
     const l = this.listing();
     return l ? (STATUS_LABELS[l.status] ?? l.status) : '';
+  });
+
+  readonly deliveryMethodLabel = computed(() => {
+    const l = this.listing();
+    return l ? (DELIVERY_METHOD_LABELS[l.deliveryMethod] ?? l.deliveryMethod) : '';
   });
 
   ngOnInit(): void {
