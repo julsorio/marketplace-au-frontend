@@ -104,6 +104,16 @@ export class ConversationThread implements OnInit {
       return;
     }
 
+    // El botón "Contactar al vendedor" ya está oculto para el propio dueño del anuncio, pero
+    // esta pantalla también es alcanzable escribiendo la URL a mano (?recipientId=<mi propio
+    // id>), y el backend igualmente lo rechaza — este aviso evita que el usuario llegue hasta
+    // el formulario de mensaje solo para encontrarse el error al enviar.
+    if (recipientId === this.myId()) {
+      this.snackBar.open('No puedes enviarte un mensaje a ti mismo', 'Cerrar', { duration: 4000 });
+      this.router.navigate(['/conversations']);
+      return;
+    }
+
     this.listingId.set(listingId);
     this.recipientId.set(recipientId);
     this.loadHeaderInfo(listingId, recipientId);
@@ -194,9 +204,10 @@ export class ConversationThread implements OnInit {
           this.messages.update((msgs) => [...msgs, message]);
         }
       },
-      error: () => {
+      error: (err) => {
         this.isSending.set(false);
-        this.snackBar.open('No se pudo enviar el mensaje', 'Cerrar', { duration: 4000 });
+        const message = err?.error?.message ?? 'No se pudo enviar el mensaje';
+        this.snackBar.open(message, 'Cerrar', { duration: 4000 });
       }
     });
   }
