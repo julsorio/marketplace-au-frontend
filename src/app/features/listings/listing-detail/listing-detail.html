@@ -50,6 +50,7 @@
         }
 
         <div class="meta">
+          <mat-chip [class]="'status-chip status-' + l.status">{{ statusLabel() }}</mat-chip>
           <mat-chip>{{ l.condition }}</mat-chip>
           <span class="location">
             <mat-icon>place</mat-icon>
@@ -69,11 +70,136 @@
             <button mat-raised-button color="primary" [routerLink]="['/listings', l.id, 'edit']">Editar</button>
             <button mat-stroked-button color="warn" (click)="onDelete()">Eliminar</button>
           </div>
+
+          @if (l.status === 'active') {
+            @if (!showReserveForm()) {
+              <button mat-stroked-button color="accent" class="reserve-toggle" (click)="openReserveForm()">
+                <mat-icon>sell</mat-icon>
+                Marcar como reservado / vendido
+              </button>
+            } @else {
+              <form [formGroup]="reserveForm" (ngSubmit)="onReserveSubmit()" class="reserve-form">
+                <h4>Reservar venta</h4>
+
+                @if (candidateBuyers().length > 0) {
+                  <mat-form-field appearance="outline">
+                    <mat-label>Comprador (de tus conversaciones sobre este anuncio)</mat-label>
+                    <mat-select (selectionChange)="onSelectCandidateBuyer($event.value)">
+                      @for (b of candidateBuyers(); track b.id) {
+                        <mat-option [value]="b.id">{{ b.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                }
+
+                <mat-form-field appearance="outline">
+                  <mat-label>ID de usuario del comprador</mat-label>
+                  <input matInput formControlName="buyerId" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Importe acordado</mat-label>
+                  <input matInput type="number" step="0.01" formControlName="amount" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Método de pago</mat-label>
+                  <mat-select formControlName="paymentMethod">
+                    <mat-option value="in_person">En persona (efectivo)</mat-option>
+                    <mat-option value="card" disabled>Tarjeta (próximamente)</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <div class="reserve-form-actions">
+                  <button mat-button type="button" (click)="showReserveForm.set(false)">Cancelar</button>
+                  <button
+                    mat-raised-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="reserveForm.invalid || isProcessingTransaction()">
+                    Confirmar reserva
+                  </button>
+                </div>
+              </form>
+            }
+          }
+
+          @if (l.status === 'reserved' && myTransaction(); as t) {
+            <div class="transaction-panel">
+              <p>
+                Reservado para <strong>{{ buyerName() || t.buyerId }}</strong> por {{ formatAmount(t) }}
+                ({{ t.paymentMethod === 'in_person' ? 'en persona' : 'tarjeta' }}).
+              </p>
+              <div class="transaction-panel-actions">
+                @if (t.paymentMethod === 'in_person') {
+                  <button mat-raised-button color="primary" (click)="onConfirmSale()" [disabled]="isProcessingTransaction()">
+                    Confirmar venta
+                  </button>
+                }
+                <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                  Cancelar reserva
+                </button>
+              </div>
+            </div>
+          }
         } @else {
-          <button mat-raised-button color="primary" class="contact-button" (click)="onContactSeller()">
-            <mat-icon>chat</mat-icon>
-            Contactar al vendedor
-          </button>
+          @if (l.status === 'active') {
+            <div class="buyer-actions">
+              <button mat-raised-button color="primary" class="contact-button" (click)="onContactSeller()">
+                <mat-icon>chat</mat-icon>
+                Contactar al vendedor
+              </button>
+
+              @if (!showBuyForm()) {
+                <button mat-stroked-button color="accent" class="buy-toggle" (click)="openBuyForm()">
+                  <mat-icon>shopping_cart</mat-icon>
+                  Comprar
+                </button>
+              } @else {
+                <form [formGroup]="buyForm" (ngSubmit)="onBuySubmit()" class="reserve-form">
+                  <h4>Reservar compra</h4>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Importe que ofreces</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="amount" />
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Método de pago</mat-label>
+                    <mat-select formControlName="paymentMethod">
+                      <mat-option value="in_person">En persona (efectivo)</mat-option>
+                      <mat-option value="card" disabled>Tarjeta (próximamente)</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <div class="reserve-form-actions">
+                    <button mat-button type="button" (click)="showBuyForm.set(false)">Cancelar</button>
+                    <button
+                      mat-raised-button
+                      color="primary"
+                      type="submit"
+                      [disabled]="buyForm.invalid || isProcessingTransaction()">
+                      Reservar compra
+                    </button>
+                  </div>
+                </form>
+              }
+            </div>
+          }
+
+          @if (myTransaction(); as t) {
+            <div class="transaction-panel">
+              <p>
+                Has reservado este artículo por {{ formatAmount(t) }}.
+                {{ t.status === 'confirmed' ? 'Venta confirmada por el vendedor.' : 'En espera de que el vendedor confirme la venta en persona.' }}
+              </p>
+              @if (t.status === 'pending') {
+                <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                  Cancelar mi reserva
+                </button>
+              }
+            </div>
+          }
         }
       </div>
     </div>
