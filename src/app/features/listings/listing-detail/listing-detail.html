@@ -52,11 +52,28 @@
         <div class="meta">
           <mat-chip [class]="'status-chip status-' + l.status">{{ statusLabel() }}</mat-chip>
           <mat-chip>{{ l.condition }}</mat-chip>
+          <mat-chip class="delivery-chip">
+            <mat-icon matChipAvatar>{{ l.deliveryMethod === 'shipping' ? 'local_shipping' : (l.deliveryMethod === 'both' ? 'sync_alt' : 'handshake') }}</mat-icon>
+            {{ deliveryMethodLabel() }}
+          </mat-chip>
           <span class="location">
             <mat-icon>place</mat-icon>
             {{ l.suburb }}, {{ l.state }}
           </span>
         </div>
+
+        @if (!isOwner() && sellerProfile(); as seller) {
+          <a class="seller-info" [routerLink]="['/users', l.sellerId]">
+            <mat-icon>storefront</mat-icon>
+            Vendido por {{ seller.displayName }}
+            @if (seller.rating.count > 0) {
+              <span class="seller-rating">
+                <mat-icon class="star-small">star</mat-icon>
+                {{ seller.rating.average }} ({{ seller.rating.count }})
+              </span>
+            }
+          </a>
+        }
 
         <app-location-map-view [latitude]="l.latitude" [longitude]="l.longitude" />
 

@@ -24,6 +24,7 @@ export interface ListingResponse {
   views: number;
   favoritesCount: number;
   createdAt: string;
+  deliveryMethod: string; // 'shipping' | 'in_person' | 'both'
 }
 
 export interface CreateListingRequest {
@@ -40,6 +41,7 @@ export interface CreateListingRequest {
   longitude: number;
   suburb: string;
   state: string;
+  deliveryMethod: string;
 }
 
 export interface UpdateListingRequest {
@@ -52,6 +54,7 @@ export interface UpdateListingRequest {
   condition: string;
   attributes: Record<string, unknown>;
   images: string[];
+  deliveryMethod: string;
 }
 
 export interface ListingSearchParams {
@@ -70,3 +73,13 @@ export interface ListingSearchParams {
 
 export const LISTING_CONDITIONS = ['new', 'like_new', 'good', 'fair'] as const;
 export type ListingCondition = typeof LISTING_CONDITIONS[number];
+
+// El vendedor especifica si hace envíos, prefiere venta en persona, o acepta ambas.
+export const LISTING_DELIVERY_METHODS = ['shipping', 'in_person', 'both'] as const;
+export type ListingDeliveryMethod = typeof LISTING_DELIVERY_METHODS[number];
+
+export const DELIVERY_METHOD_LABELS: Record<string, string> = {
+  shipping: 'Envío',
+  in_person: 'Solo en persona',
+  both: 'Envío o en persona'
+};

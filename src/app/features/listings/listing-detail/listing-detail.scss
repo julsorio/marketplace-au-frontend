@@ -201,3 +201,34 @@
   display: flex;
   gap: 8px;
 }
+
+.seller-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin: 8px 0 16px;
+  color: rgba(0, 0, 0, 0.7);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.seller-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #856404;
+}
+
+.star-small {
+  color: #fbbc04;
+}
