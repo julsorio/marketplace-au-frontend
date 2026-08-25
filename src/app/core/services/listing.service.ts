@@ -26,8 +26,13 @@ export class ListingService {
     return this.http.get<ListingResponse[]>(this.apiUrl, { params: httpParams });
   }
 
-  getById(id: string): Observable<ListingResponse> {
-    return this.http.get<ListingResponse>(`${this.apiUrl}/${id}`);
+  // trackView solo debe ir a true desde la pantalla de detalle del anuncio (una visita real
+  // del usuario); el resto de pantallas llama a este mismo método solo para enriquecer sus
+  // listas con título/imagen del listing (conversaciones, transacciones), y eso no debe
+  // contar como una visualización — por eso el valor por defecto es false.
+  getById(id: string, trackView = false): Observable<ListingResponse> {
+    const params = trackView ? new HttpParams().set('trackView', 'true') : undefined;
+    return this.http.get<ListingResponse>(`${this.apiUrl}/${id}`, { params });
   }
 
   create(request: CreateListingRequest): Observable<ListingResponse> {

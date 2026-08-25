@@ -118,7 +118,7 @@ export class ListingDetail implements OnInit {
       return;
     }
 
-    this.listingService.getById(id).subscribe({
+    this.listingService.getById(id, true).subscribe({
       next: (result) => {
         this.listing.set(result);
         this.isLoading.set(false);
