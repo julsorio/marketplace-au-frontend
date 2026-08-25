@@ -58,6 +58,19 @@
           </span>
         </div>
 
+        @if (!isOwner() && sellerProfile(); as seller) {
+          <a class="seller-info" [routerLink]="['/users', l.sellerId]">
+            <mat-icon>storefront</mat-icon>
+            Vendido por {{ seller.displayName }}
+            @if (seller.rating.count > 0) {
+              <span class="seller-rating">
+                <mat-icon class="star-small">star</mat-icon>
+                {{ seller.rating.average }} ({{ seller.rating.count }})
+              </span>
+            }
+          </a>
+        }
+
         <app-location-map-view [latitude]="l.latitude" [longitude]="l.longitude" />
 
         <h3>Descripción</h3>

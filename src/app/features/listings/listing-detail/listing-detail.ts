@@ -21,6 +21,7 @@ import { UserService } from '../../../core/services/user.service';
 import { TransactionService } from '../../../core/services/transaction.service';
 import { ListingResponse } from '../../../core/models/listing.model';
 import { TransactionResponse } from '../../../core/models/transaction.model';
+import { UserPublicProfile } from '../../../core/models/user.model';
 import { LocationMapView } from '../../../shared/components/location-map-view/location-map-view';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -67,6 +68,7 @@ export class ListingDetail implements OnInit {
   readonly isLoading = signal(true);
   readonly notFound = signal(false);
   readonly selectedImageIndex = signal(0);
+  readonly sellerProfile = signal<UserPublicProfile | null>(null);
 
   // Transacción (reserva/venta) relacionada con este anuncio y con el usuario actual: si es
   // el vendedor, la suya como vendedor; si es el comprador, la suya como comprador. No hay
@@ -115,6 +117,7 @@ export class ListingDetail implements OnInit {
       next: (result) => {
         this.listing.set(result);
         this.isLoading.set(false);
+        this.loadSellerProfile(result.sellerId);
 
         // Solo tiene sentido buscar una transacción si el anuncio no está disponible (ya
         // fue reservado o vendido) y hay alguien identificado consultándolo.
@@ -126,6 +129,15 @@ export class ListingDetail implements OnInit {
         this.notFound.set(true);
         this.isLoading.set(false);
       }
+    });
+  }
+
+  // Nombre y rating del vendedor, para que un comprador pueda hacerse una idea de su
+  // reputación antes de contactar o comprar. Se muestra con enlace a /users/:id.
+  private loadSellerProfile(sellerId: string): void {
+    this.userService.getPublicProfile(sellerId).subscribe({
+      next: (profile) => this.sellerProfile.set(profile),
+      error: () => this.sellerProfile.set(null)
     });
   }
 

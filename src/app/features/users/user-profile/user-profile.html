@@ -1,0 +1,60 @@
+<div class="profile-page">
+  <button mat-button routerLink="/listings" class="back-button">
+    <mat-icon>arrow_back</mat-icon>
+    Volver al listado
+  </button>
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else if (notFound()) {
+    <p class="not-found">Este usuario no existe.</p>
+  } @else if (profile(); as p) {
+    <div class="profile-header">
+      @if (p.avatarUrl) {
+        <img class="avatar" [src]="p.avatarUrl" [alt]="p.displayName" />
+      } @else {
+        <div class="avatar no-avatar">
+          <mat-icon>person</mat-icon>
+        </div>
+      }
+      <div class="profile-info">
+        <h1>{{ p.displayName }}</h1>
+        <div class="rating-summary">
+          @for (i of stars; track i) {
+            <mat-icon class="star" [class.filled]="i <= p.rating.average">star</mat-icon>
+          }
+          @if (p.rating.count > 0) {
+            <span class="rating-count">
+              {{ p.rating.average }} ({{ p.rating.count }} {{ p.rating.count === 1 ? 'reseña' : 'reseñas' }})
+            </span>
+          } @else {
+            <span class="rating-count">Sin reseñas todavía</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <h3>Reseñas recibidas</h3>
+    @if (reviews().length === 0) {
+      <p class="no-results">Todavía no tiene reseñas.</p>
+    } @else {
+      <div class="review-list">
+        @for (r of reviews(); track r.id) {
+          <mat-card class="review-card">
+            <div class="review-stars">
+              @for (i of stars; track i) {
+                <mat-icon class="star" [class.filled]="i <= r.rating">star</mat-icon>
+              }
+            </div>
+            @if (r.comment) {
+              <p class="review-comment">{{ r.comment }}</p>
+            }
+            <p class="review-date">{{ formatDate(r.createdAt) }}</p>
+          </mat-card>
+        }
+      </div>
+    }
+  }
+</div>

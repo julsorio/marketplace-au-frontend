@@ -15,4 +15,5 @@ export interface UserPublicProfile {
   id: string;
   displayName: string;
   avatarUrl: string;
+  rating: Rating;
 }

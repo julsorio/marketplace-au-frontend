@@ -13,20 +13,66 @@
         <div class="transaction-list">
           @for (item of purchases(); track item.transaction.id) {
             <mat-card class="transaction-row" [routerLink]="['/listings', item.transaction.listingId]">
-              @if (item.listingThumbnail) {
-                <img class="thumbnail" [src]="item.listingThumbnail" [alt]="item.listingTitle" />
-              } @else {
-                <div class="thumbnail no-image">
-                  <mat-icon>image</mat-icon>
+              <div class="transaction-main">
+                @if (item.listingThumbnail) {
+                  <img class="thumbnail" [src]="item.listingThumbnail" [alt]="item.listingTitle" />
+                } @else {
+                  <div class="thumbnail no-image">
+                    <mat-icon>image</mat-icon>
+                  </div>
+                }
+                <div class="transaction-info">
+                  <p class="listing-title">{{ item.listingTitle }}</p>
+                  <p class="amount">{{ formatAmount(item.transaction) }}</p>
                 </div>
-              }
-              <div class="transaction-info">
-                <p class="listing-title">{{ item.listingTitle }}</p>
-                <p class="amount">{{ formatAmount(item.transaction) }}</p>
+                <mat-chip [class]="'status-chip status-' + item.transaction.status">
+                  {{ statusLabel(item.transaction.status) }}
+                </mat-chip>
               </div>
-              <mat-chip [class]="'status-chip status-' + item.transaction.status">
-                {{ statusLabel(item.transaction.status) }}
-              </mat-chip>
+
+              @if (item.transaction.status === 'confirmed') {
+                @if (item.hasReviewed) {
+                  <p class="reviewed-note">Ya has dejado una reseña</p>
+                } @else if (openReviewFor() !== item.transaction.id) {
+                  <button mat-stroked-button class="review-toggle" (click)="openReview(item, $event)">
+                    <mat-icon>rate_review</mat-icon>
+                    Dejar reseña
+                  </button>
+                } @else {
+                  <form
+                    [formGroup]="reviewForm"
+                    (ngSubmit)="submitReview(item, $event)"
+                    class="review-form"
+                    (click)="$event.stopPropagation()">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Valoración</mat-label>
+                      <mat-select formControlName="rating">
+                        <mat-option [value]="5">5 estrellas</mat-option>
+                        <mat-option [value]="4">4 estrellas</mat-option>
+                        <mat-option [value]="3">3 estrellas</mat-option>
+                        <mat-option [value]="2">2 estrellas</mat-option>
+                        <mat-option [value]="1">1 estrella</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Comentario (opcional)</mat-label>
+                      <textarea matInput formControlName="comment" rows="2"></textarea>
+                    </mat-form-field>
+
+                    <div class="review-form-actions">
+                      <button mat-button type="button" (click)="closeReview($event)">Cancelar</button>
+                      <button
+                        mat-raised-button
+                        color="primary"
+                        type="submit"
+                        [disabled]="reviewForm.invalid || isSubmittingReview()">
+                        Publicar
+                      </button>
+                    </div>
+                  </form>
+                }
+              }
             </mat-card>
           }
         </div>
@@ -44,20 +90,66 @@
         <div class="transaction-list">
           @for (item of sales(); track item.transaction.id) {
             <mat-card class="transaction-row" [routerLink]="['/listings', item.transaction.listingId]">
-              @if (item.listingThumbnail) {
-                <img class="thumbnail" [src]="item.listingThumbnail" [alt]="item.listingTitle" />
-              } @else {
-                <div class="thumbnail no-image">
-                  <mat-icon>image</mat-icon>
+              <div class="transaction-main">
+                @if (item.listingThumbnail) {
+                  <img class="thumbnail" [src]="item.listingThumbnail" [alt]="item.listingTitle" />
+                } @else {
+                  <div class="thumbnail no-image">
+                    <mat-icon>image</mat-icon>
+                  </div>
+                }
+                <div class="transaction-info">
+                  <p class="listing-title">{{ item.listingTitle }}</p>
+                  <p class="amount">{{ formatAmount(item.transaction) }}</p>
                 </div>
-              }
-              <div class="transaction-info">
-                <p class="listing-title">{{ item.listingTitle }}</p>
-                <p class="amount">{{ formatAmount(item.transaction) }}</p>
+                <mat-chip [class]="'status-chip status-' + item.transaction.status">
+                  {{ statusLabel(item.transaction.status) }}
+                </mat-chip>
               </div>
-              <mat-chip [class]="'status-chip status-' + item.transaction.status">
-                {{ statusLabel(item.transaction.status) }}
-              </mat-chip>
+
+              @if (item.transaction.status === 'confirmed') {
+                @if (item.hasReviewed) {
+                  <p class="reviewed-note">Ya has dejado una reseña</p>
+                } @else if (openReviewFor() !== item.transaction.id) {
+                  <button mat-stroked-button class="review-toggle" (click)="openReview(item, $event)">
+                    <mat-icon>rate_review</mat-icon>
+                    Dejar reseña
+                  </button>
+                } @else {
+                  <form
+                    [formGroup]="reviewForm"
+                    (ngSubmit)="submitReview(item, $event)"
+                    class="review-form"
+                    (click)="$event.stopPropagation()">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Valoración</mat-label>
+                      <mat-select formControlName="rating">
+                        <mat-option [value]="5">5 estrellas</mat-option>
+                        <mat-option [value]="4">4 estrellas</mat-option>
+                        <mat-option [value]="3">3 estrellas</mat-option>
+                        <mat-option [value]="2">2 estrellas</mat-option>
+                        <mat-option [value]="1">1 estrella</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                      <mat-label>Comentario (opcional)</mat-label>
+                      <textarea matInput formControlName="comment" rows="2"></textarea>
+                    </mat-form-field>
+
+                    <div class="review-form-actions">
+                      <button mat-button type="button" (click)="closeReview($event)">Cancelar</button>
+                      <button
+                        mat-raised-button
+                        color="primary"
+                        type="submit"
+                        [disabled]="reviewForm.invalid || isSubmittingReview()">
+                        Publicar
+                      </button>
+                    </div>
+                  </form>
+                }
+              }
             </mat-card>
           }
         </div>

@@ -29,6 +29,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/listings/listing-detail/listing-detail').then(m => m.ListingDetail)
   },
   {
+    path: 'users/:id',
+    loadComponent: () => import('./features/users/user-profile/user-profile').then(m => m.UserProfile)
+  },
+  {
     path: 'transactions',
     loadComponent: () => import('./features/transactions/transactions-list/transactions-list').then(m => m.TransactionsList),
     canActivate: [authGuard]
