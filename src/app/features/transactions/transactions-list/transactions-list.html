@@ -1,0 +1,67 @@
+<div class="transactions-page">
+  <h1>Mis transacciones</h1>
+
+  <mat-tab-group>
+    <mat-tab label="Compras">
+      @if (isLoadingPurchases()) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+        </div>
+      } @else if (purchases().length === 0) {
+        <p class="no-results">Todavía no has comprado ningún artículo.</p>
+      } @else {
+        <div class="transaction-list">
+          @for (item of purchases(); track item.transaction.id) {
+            <mat-card class="transaction-row" [routerLink]="['/listings', item.transaction.listingId]">
+              @if (item.listingThumbnail) {
+                <img class="thumbnail" [src]="item.listingThumbnail" [alt]="item.listingTitle" />
+              } @else {
+                <div class="thumbnail no-image">
+                  <mat-icon>image</mat-icon>
+                </div>
+              }
+              <div class="transaction-info">
+                <p class="listing-title">{{ item.listingTitle }}</p>
+                <p class="amount">{{ formatAmount(item.transaction) }}</p>
+              </div>
+              <mat-chip [class]="'status-chip status-' + item.transaction.status">
+                {{ statusLabel(item.transaction.status) }}
+              </mat-chip>
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-tab>
+
+    <mat-tab label="Ventas">
+      @if (isLoadingSales()) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+        </div>
+      } @else if (sales().length === 0) {
+        <p class="no-results">Todavía no has vendido ningún artículo.</p>
+      } @else {
+        <div class="transaction-list">
+          @for (item of sales(); track item.transaction.id) {
+            <mat-card class="transaction-row" [routerLink]="['/listings', item.transaction.listingId]">
+              @if (item.listingThumbnail) {
+                <img class="thumbnail" [src]="item.listingThumbnail" [alt]="item.listingTitle" />
+              } @else {
+                <div class="thumbnail no-image">
+                  <mat-icon>image</mat-icon>
+                </div>
+              }
+              <div class="transaction-info">
+                <p class="listing-title">{{ item.listingTitle }}</p>
+                <p class="amount">{{ formatAmount(item.transaction) }}</p>
+              </div>
+              <mat-chip [class]="'status-chip status-' + item.transaction.status">
+                {{ statusLabel(item.transaction.status) }}
+              </mat-chip>
+            </mat-card>
+          }
+        </div>
+      }
+    </mat-tab>
+  </mat-tab-group>
+</div>

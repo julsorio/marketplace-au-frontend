@@ -114,7 +114,6 @@
 }
 
 .contact-button {
-  margin-top: 24px;
   width: 100%;
 }
 
@@ -136,4 +135,69 @@
   &.active {
     color: #e91e63;
   }
+}
+
+.status-chip {
+  &.status-reserved {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+  }
+
+  &.status-sold {
+    background-color: #f1f1f1 !important;
+    color: rgba(0, 0, 0, 0.6) !important;
+  }
+}
+
+.reserve-toggle {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.buyer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.buy-toggle {
+  width: 100%;
+}
+
+.reserve-form {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+
+  h4 {
+    margin: 0 0 8px;
+  }
+}
+
+.reserve-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.transaction-panel {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f7f7f7;
+
+  p {
+    margin: 0 0 12px;
+  }
+}
+
+.transaction-panel-actions {
+  display: flex;
+  gap: 8px;
 }

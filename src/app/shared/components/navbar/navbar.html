@@ -7,6 +7,11 @@
   <span class="spacer"></span>
 
   @if (authService.isAuthenticated()) {
+    <button mat-button routerLink="/transactions">
+      <mat-icon>receipt_long</mat-icon>
+      Transacciones
+    </button>
+
     <button mat-button routerLink="/favorites">
       <mat-icon>favorite</mat-icon>
       Favoritos
