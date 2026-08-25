@@ -73,9 +73,8 @@ export class ConversationList implements OnInit {
 
   // El endpoint de conversaciones solo trae ids (listingId, participants); aquí lo
   // completamos con el título/imagen del anuncio y el nombre del otro participante.
-  // Nota: listingService.getById() incrementa el contador de visitas del anuncio (mismo
-  // comportamiento que al abrir su página de detalle) — es un efecto secundario ya existente
-  // en el backend, no algo nuevo de esta pantalla, pero merece revisarse más adelante.
+  // getById() sin el segundo argumento no cuenta como visualización (trackView=false por
+  // defecto) — solo la pantalla de detalle del anuncio la marca como una visita real.
   private enrich(conversation: ConversationResponse, myId: string | undefined): Observable<ConversationView> {
     const otherId = conversation.participants.find((p) => p !== myId) ?? conversation.participants[0];
 
