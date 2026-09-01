@@ -17,7 +17,13 @@ export class GeocodingService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.geocodingApiUrl;
 
-  /** Busca coordenadas a partir de una dirección o suburbio en texto libre. */
+  /**
+   * Busca coordenadas a partir de una dirección o suburbio en texto libre, usando la API
+   * pública de Nominatim/OpenStreetMap.
+   * @param addressQuery Texto libre con la dirección o suburbio a buscar.
+   * @returns Observable que emite los resultados de geocodificación encontrados (hasta 5,
+   * limitados a Australia).
+   */
   search(addressQuery: string): Observable<GeocodeResult[]> {
     const params = new HttpParams()
       .set('q', addressQuery)

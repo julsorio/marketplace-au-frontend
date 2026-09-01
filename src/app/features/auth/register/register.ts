@@ -36,6 +36,11 @@ export class Register {
 
   readonly isLoading = signal(false);
 
+  /**
+   * URL a la que hay que volver tras registrarse (y quedar autenticado). Igual que en Login,
+   * llega en el query param `returnUrl` cuando venimos de authGuard o de un flujo que exigía
+   * sesión; si no está presente, onSubmit redirige a /listings por defecto.
+   */
   readonly returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
   readonly form = this.fb.group({
@@ -45,6 +50,13 @@ export class Register {
     password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
+  /**
+   * Envía el formulario de registro: si es inválido, lo marca todo como touched para mostrar
+   * los errores y no continúa. Si es válido, registra al usuario vía AuthService —que además
+   * autentica automáticamente al usuario recién registrado, sin necesidad de pasar por login—
+   * y, si tiene éxito, redirige a `returnUrl` (o a /listings por defecto); si falla, muestra
+   * el mensaje de error del backend en un snackbar.
+   */
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

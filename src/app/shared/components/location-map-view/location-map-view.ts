@@ -33,6 +33,12 @@ export class LocationMapView implements AfterViewInit, OnDestroy {
 
   private map!: L.Map;
 
+  /**
+   * Inicializa el mapa Leaflet una vez el contenedor está en el DOM: centra la vista en
+   * (latitude, longitude) y dibuja un círculo de radiusMeters de radio en lugar de un pin
+   * exacto, para no revelar la ubicación precisa del vendedor. Ajusta el zoom con fitBounds
+   * para que el círculo quede siempre visible completo.
+   */
   ngAfterViewInit(): void {
     const center: L.LatLngTuple = [this.latitude(), this.longitude()];
 
@@ -56,6 +62,9 @@ export class LocationMapView implements AfterViewInit, OnDestroy {
     this.map.fitBounds(circle.getBounds(), { maxZoom: 15 });
   }
 
+  /**
+   * Destruye la instancia del mapa Leaflet al destruir el componente, liberando sus recursos.
+   */
   ngOnDestroy(): void {
     this.map?.remove();
   }

@@ -14,6 +14,10 @@ export class CategoryService {
 
   private loaded = false;
 
+  /**
+   * Carga el listado de categorías desde el backend y lo guarda en el signal `categories`.
+   * Es idempotente: si ya se cargaron antes, no vuelve a pedirlas al servidor.
+   */
   loadCategories() {
     if (this.loaded) {
       return;
@@ -27,6 +31,11 @@ export class CategoryService {
     ).subscribe();
   }
 
+  /**
+   * Devuelve las subcategorías de una categoría dada.
+   * @param categoryId Id de la categoría padre.
+   * @returns Las subcategorías de esa categoría, o un array vacío si no existe o no tiene.
+   */
   getSubcategories(categoryId: string): CategoryResponse[] {
     const category = this._categories().find(c => c.id === categoryId);
     return category?.subcategories ?? [];

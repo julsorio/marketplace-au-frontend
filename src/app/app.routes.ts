@@ -1,6 +1,12 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
+/**
+ * Rutas raíz de la aplicación.
+ * Todos los componentes se cargan de forma perezosa (lazy loading) mediante `loadComponent`, de modo
+ * que el código de cada feature solo se descarga cuando el usuario navega a esa ruta. Las rutas que
+ * requieren un usuario autenticado incorporan `authGuard` en `canActivate`.
+ */
 export const routes: Routes = [
   {
     path: 'login',

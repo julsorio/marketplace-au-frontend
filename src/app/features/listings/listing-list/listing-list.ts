@@ -27,6 +27,15 @@ interface ResolvedLocation {
 
 const RADIUS_OPTIONS = [5, 10, 25, 50, 100];
 
+/**
+ * Listado de anuncios con filtros reactivos (texto, categoría, condición, precio y ubicación
+ * con radio).
+ *
+ * Los cambios en `filterForm` se escuchan con debounce (400 ms) y se relanza la búsqueda solo
+ * cuando el valor realmente cambia. Cuando hay texto de ubicación, este se geocodifica primero
+ * (Nominatim) para obtener lat/lng y así poder filtrar por radio; el resto de filtros no
+ * requieren ese paso previo.
+ */
 @Component({
   selector: 'app-listing-list',
   standalone: true,
@@ -79,6 +88,12 @@ export class ListingList {
     radiusKm: [25 as number | null]
   });
 
+  /**
+   * Lanza la búsqueda inicial y suscribe los cambios de `filterForm` con debounce (400 ms) y
+   * `distinctUntilChanged` (comparando por JSON) para relanzar la búsqueda solo cuando el
+   * conjunto de filtros cambia de verdad, evitando peticiones redundantes mientras el usuario
+   * escribe. `takeUntilDestroyed` corta la suscripción al destruirse el componente.
+   */
   constructor() {
     this.categoryService.loadCategories();
     this.search();
@@ -92,6 +107,11 @@ export class ListingList {
       .subscribe(() => this.search());
   }
 
+  /**
+   * Resuelve la ubicación buscada (si hay una y ha cambiado) geocodificándola con
+   * `GeocodingService` antes de lanzar la búsqueda de anuncios, o lanza la búsqueda
+   * directamente si no hay texto de ubicación o ya estaba resuelta.
+   */
   private search(): void {
     const locationQuery = (this.filterForm.value.locationQuery ?? '').trim();
 
@@ -136,6 +156,10 @@ export class ListingList {
     });
   }
 
+  /**
+   * Ejecuta la búsqueda de anuncios en el backend con los filtros actuales, incluyendo
+   * lat/lng/radio cuando hay una ubicación resuelta, y vuelca el resultado en `listings`.
+   */
   private runSearch(): void {
     this.isLoading.set(true);
     const filters = this.filterForm.value;
@@ -161,12 +185,26 @@ export class ListingList {
     });
   }
 
+  /**
+   * Formatea el precio de un anuncio como moneda localizada (en-AU).
+   *
+   * @param listing Anuncio cuyo precio se quiere formatear.
+   * @returns El precio formateado como cadena de moneda.
+   */
   formatPrice(listing: ListingResponse): string {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: listing.currency }).format(listing.price);
   }
 
-  // event.stopPropagation() evita que el click en el corazón también dispare la navegación
-  // al detalle (la tarjeta entera tiene [routerLink]).
+  /**
+   * Alterna el estado de favorito de un anuncio desde la tarjeta del listado, exigiendo sesión
+   * iniciada.
+   *
+   * `event.stopPropagation()` evita que el click en el corazón también dispare la navegación
+   * al detalle (la tarjeta entera tiene `[routerLink]`).
+   *
+   * @param listing Anuncio sobre el que se alterna el favorito.
+   * @param event Evento de clic sobre el icono de favorito.
+   */
   toggleFavorite(listing: ListingResponse, event: Event): void {
     event.stopPropagation();
 

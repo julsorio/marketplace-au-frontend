@@ -20,6 +20,13 @@ interface ConversationView {
   otherParticipantName: string;
 }
 
+/**
+ * Bandeja de entrada de conversaciones del usuario.
+ *
+ * El endpoint de conversaciones solo devuelve datos mínimos (ids de anuncio y participantes),
+ * así que cada conversación se enriquece con el título/imagen del anuncio y el nombre del otro
+ * participante mediante `forkJoin` antes de mostrarla.
+ */
 @Component({
   selector: 'app-conversation-list',
   standalone: true,
@@ -43,10 +50,17 @@ export class ConversationList implements OnInit {
   readonly isLoading = signal(true);
   readonly conversations = signal<ConversationView[]>([]);
 
+  /**
+   * Carga la bandeja de conversaciones al iniciar la pantalla.
+   */
   ngOnInit(): void {
     this.load();
   }
 
+  /**
+   * Obtiene las conversaciones del usuario y las enriquece antes de exponerlas en el signal
+   * `conversations`.
+   */
   private load(): void {
     this.isLoading.set(true);
 
@@ -71,10 +85,17 @@ export class ConversationList implements OnInit {
     });
   }
 
-  // El endpoint de conversaciones solo trae ids (listingId, participants); aquí lo
-  // completamos con el título/imagen del anuncio y el nombre del otro participante.
-  // getById() sin el segundo argumento no cuenta como visualización (trackView=false por
-  // defecto) — solo la pantalla de detalle del anuncio la marca como una visita real.
+  /**
+   * Completa una conversación con el título/imagen del anuncio asociado y el nombre del otro
+   * participante, ya que el endpoint de conversaciones solo trae ids (listingId, participants).
+   *
+   * `getById()` sin el segundo argumento no cuenta como visualización (`trackView=false` por
+   * defecto) — solo la pantalla de detalle del anuncio la marca como una visita real.
+   *
+   * @param conversation Conversación tal como la devuelve el backend.
+   * @param myId Id del usuario actual, para determinar quién es "el otro participante".
+   * @returns Observable con la conversación ya enriquecida para la vista.
+   */
   private enrich(conversation: ConversationResponse, myId: string | undefined): Observable<ConversationView> {
     const otherId = conversation.participants.find((p) => p !== myId) ?? conversation.participants[0];
 
@@ -91,6 +112,12 @@ export class ConversationList implements OnInit {
     );
   }
 
+  /**
+   * Formatea una fecha ISO como fecha corta localizada (en-AU) para la lista de conversaciones.
+   *
+   * @param iso Fecha en formato ISO 8601, o `null` si no hay fecha disponible.
+   * @returns La fecha formateada, o cadena vacía si `iso` es `null`.
+   */
   formatDate(iso: string | null): string {
     if (!iso) return '';
     return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });

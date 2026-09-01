@@ -31,11 +31,14 @@ export class Navbar {
   private readonly favoriteService = inject(FavoriteService);
   readonly conversationService = inject(ConversationService);
 
+  /**
+   * Reacciona al estado de sesión (authService.isAuthenticated) para cargar los ids de
+   * favoritos y arrancar el polling de mensajes no leídos en cuanto hay sesión iniciada
+   * (al arrancar la app con un token ya guardado, o justo tras iniciar sesión), de modo que
+   * el corazón de listing-list/listing-detail y el badge de "Mensajes" se pinten
+   * correctamente sin depender de qué pantalla se visite primero.
+   */
   constructor() {
-    // Carga los ids de favoritos y arranca el polling de mensajes no leídos en cuanto hay
-    // sesión iniciada (al arrancar la app con un token ya guardado, o justo tras iniciar
-    // sesión), para que el corazón de listing-list/listing-detail y el badge de "Mensajes"
-    // se pinten correctamente sin depender de qué pantalla se visite primero.
     effect(() => {
       if (this.authService.isAuthenticated()) {
         this.favoriteService.ensureLoaded();
@@ -44,6 +47,10 @@ export class Navbar {
     });
   }
 
+  /**
+   * Cierra la sesión del usuario: invoca el logout de AuthService, resetea el estado de
+   * favoritos y el contador de mensajes no leídos, y redirige a la pantalla de login.
+   */
   onLogout(): void {
     this.authService.logout();
     this.favoriteService.reset();

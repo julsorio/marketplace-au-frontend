@@ -17,8 +17,13 @@ export class FavoriteService {
   readonly favoriteIds = signal<Set<string>>(new Set());
   private loaded = false;
 
-  // Se llama de forma reactiva (ver Navbar) cuando hay sesión iniciada; es idempotente, así
-  // que da igual si se llama varias veces mientras dura la sesión.
+  /**
+   * Carga en memoria (signal `favoriteIds`) los ids de los anuncios favoritos del usuario
+   * actual, para poder pintar el icono de corazón en cualquier pantalla (listing-list,
+   * listing-detail) sin pedir la lista completa de favoritos (con el detalle de cada
+   * listing) cada vez. Se llama de forma reactiva (ver Navbar) cuando hay sesión iniciada;
+   * es idempotente, así que da igual si se llama varias veces mientras dura la sesión.
+   */
   ensureLoaded(): void {
     if (this.loaded || !this.authService.isAuthenticated()) {
       return;
@@ -33,14 +38,29 @@ export class FavoriteService {
     });
   }
 
+  /**
+   * Obtiene la lista completa de favoritos del usuario, con el detalle de cada listing.
+   * @returns Observable que emite el listado de favoritos.
+   */
   getFavorites(): Observable<FavoriteResponse[]> {
     return this.http.get<FavoriteResponse[]>(this.apiUrl);
   }
 
+  /**
+   * Indica si un anuncio está marcado como favorito, consultando el signal en memoria
+   * `favoriteIds` (sin llamar al backend).
+   * @param listingId Id del anuncio.
+   * @returns true si el anuncio está en favoritos.
+   */
   isFavorite(listingId: string): boolean {
     return this.favoriteIds().has(listingId);
   }
 
+  /**
+   * Alterna el estado de favorito de un anuncio: lo añade si no lo estaba, o lo quita si ya
+   * lo estaba.
+   * @param listingId Id del anuncio.
+   */
   toggle(listingId: string): void {
     if (this.isFavorite(listingId)) {
       this.remove(listingId);
@@ -49,6 +69,12 @@ export class FavoriteService {
     }
   }
 
+  /**
+   * Añade un anuncio a favoritos con actualización optimista: el signal `favoriteIds` se
+   * actualiza al instante para que la UI reaccione sin esperar al backend, y se revierte si
+   * la petición falla.
+   * @param listingId Id del anuncio a añadir.
+   */
   add(listingId: string): void {
     // Actualización optimista: se refleja al instante en la UI y se revierte si falla.
     this.favoriteIds.update((ids) => new Set(ids).add(listingId));
@@ -63,6 +89,12 @@ export class FavoriteService {
     });
   }
 
+  /**
+   * Quita un anuncio de favoritos con actualización optimista: el signal `favoriteIds` se
+   * actualiza al instante para que la UI reaccione sin esperar al backend, y se revierte si
+   * la petición falla.
+   * @param listingId Id del anuncio a quitar.
+   */
   remove(listingId: string): void {
     this.favoriteIds.update((ids) => {
       const next = new Set(ids);
@@ -75,8 +107,11 @@ export class FavoriteService {
     });
   }
 
-  // Se llama al cerrar sesión (ver Navbar), para que el siguiente usuario que inicie sesión
-  // en el mismo navegador no arrastre los favoritos del anterior.
+  /**
+   * Reinicia el estado de favoritos en memoria. Se llama al cerrar sesión (ver Navbar), para
+   * que el siguiente usuario que inicie sesión en el mismo navegador no arrastre los
+   * favoritos del anterior.
+   */
   reset(): void {
     this.loaded = false;
     this.favoriteIds.set(new Set());

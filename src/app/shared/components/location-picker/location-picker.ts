@@ -81,6 +81,13 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   private map!: L.Map;
   private marker: L.Marker | null = null;
 
+  /**
+   * Inicializa el mapa Leaflet una vez el contenedor está en el DOM. Centra la vista en
+   * (initialLatitude, initialLongitude) con zoom cercano si se recibió una ubicación inicial,
+   * o en el centro de Australia con zoom alejado en caso contrario, y coloca el pin inicial
+   * sin emitir locationChange (ya es la ubicación que ya tenía el padre). También registra
+   * el listener de clic en el mapa para permitir colocar/mover el pin manualmente.
+   */
   ngAfterViewInit(): void {
     const lat = this.initialLatitude();
     const lng = this.initialLongitude();
@@ -106,10 +113,18 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Destruye la instancia del mapa Leaflet al destruir el componente, liberando sus recursos.
+   */
   ngOnDestroy(): void {
     this.map?.remove();
   }
 
+  /**
+   * Busca direcciones que coincidan con el texto introducido en `query` usando GeocodingService
+   * (geocoding vía OSM/Nominatim) y vuelca los resultados en `results`. No hace nada si el
+   * campo de búsqueda está vacío. En caso de error, limpia los resultados en vez de propagarlo.
+   */
   search(): void {
     const q = this.query().trim();
     if (!q) {
@@ -129,6 +144,13 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Selecciona uno de los resultados de la búsqueda de direcciones: centra el mapa en sus
+   * coordenadas, coloca (o mueve) el pin ahí emitiendo locationChange, y limpia el buscador
+   * (resultados y texto de búsqueda) dejando visible la dirección elegida.
+   *
+   * @param result Resultado de geocoding elegido por el usuario.
+   */
   selectResult(result: GeocodeResult): void {
     this.map.setView([result.latitude, result.longitude], 15);
     this.placeMarker(result.latitude, result.longitude, {

@@ -1,8 +1,10 @@
+/** Valoración media de un usuario y sobre cuántas reseñas se calcula. */
 export interface Rating {
   average: number;
   count: number;
 }
 
+/** Resumen del usuario autenticado, tal como viene embebido en `AuthResponse`. */
 export interface UserSummary {
   id: string;
   email: string;

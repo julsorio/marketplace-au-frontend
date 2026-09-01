@@ -18,9 +18,13 @@ export class ConversationService {
   readonly unreadCount = signal(0);
   private unreadPollingStarted = false;
 
-  // Arranca el polling del contador de no leídos la primera vez que hay sesión iniciada (ver
-  // Navbar); es idempotente y, al igual que el propio Navbar, vive durante toda la sesión de
-  // la app en vez de pararse/reanudarse por pantalla.
+  /**
+   * Arranca el polling del contador de mensajes no leídos (`unreadCount`), sumando el
+   * unreadCount de todas las conversaciones del usuario para pintar el badge del Navbar.
+   * Debe llamarse la primera vez que hay sesión iniciada (ver Navbar); es idempotente
+   * —llamarlo varias veces no arranca polling adicional— y, al igual que el propio Navbar,
+   * vive durante toda la sesión de la app en vez de pararse/reanudarse por pantalla.
+   */
   ensureUnreadPolling(): void {
     if (this.unreadPollingStarted) {
       return;
@@ -40,22 +44,44 @@ export class ConversationService {
       );
   }
 
+  /**
+   * Pone a cero el contador de mensajes no leídos en memoria (sin afectar al backend).
+   */
   resetUnreadCount(): void {
     this.unreadCount.set(0);
   }
 
+  /**
+   * Envía un mensaje dentro de una conversación.
+   * @param request Datos del mensaje a enviar (conversación destino, texto, etc.).
+   * @returns Observable que emite el mensaje creado.
+   */
   sendMessage(request: SendMessageRequest): Observable<MessageResponse> {
     return this.http.post<MessageResponse>(`${this.apiUrl}/messages`, request);
   }
 
+  /**
+   * Obtiene todas las conversaciones del usuario autenticado.
+   * @returns Observable que emite el listado de conversaciones.
+   */
   getConversations(): Observable<ConversationResponse[]> {
     return this.http.get<ConversationResponse[]>(`${this.apiUrl}/conversations`);
   }
 
+  /**
+   * Obtiene una conversación concreta por id.
+   * @param id Id de la conversación.
+   * @returns Observable que emite la conversación solicitada.
+   */
   getConversation(id: string): Observable<ConversationResponse> {
     return this.http.get<ConversationResponse>(`${this.apiUrl}/conversations/${id}`);
   }
 
+  /**
+   * Obtiene los mensajes de una conversación.
+   * @param conversationId Id de la conversación.
+   * @returns Observable que emite el listado de mensajes de la conversación.
+   */
   getMessages(conversationId: string): Observable<MessageResponse[]> {
     return this.http.get<MessageResponse[]>(`${this.apiUrl}/conversations/${conversationId}/messages`);
   }

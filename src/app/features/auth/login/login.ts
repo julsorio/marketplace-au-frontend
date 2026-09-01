@@ -36,8 +36,11 @@ export class Login {
 
   readonly isLoading = signal(false);
 
-  // Si venimos de authGuard (o del botón "Contactar al vendedor"), aquí llega la
-  // URL a la que había que volver tras iniciar sesión
+  /**
+   * URL a la que hay que volver tras iniciar sesión. Si venimos de authGuard (o del botón
+   * "Contactar al vendedor"), llega en el query param `returnUrl`; si no está presente,
+   * onSubmit redirige a /listings por defecto.
+   */
   readonly returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
   readonly form = this.fb.group({
@@ -45,6 +48,12 @@ export class Login {
     password: ['', [Validators.required]]
   });
 
+  /**
+   * Envía el formulario de login: si es inválido, lo marca todo como touched para mostrar
+   * los errores y no continúa. Si es válido, autentica contra el backend vía AuthService y,
+   * si tiene éxito, redirige a `returnUrl` (o a /listings por defecto); si falla, muestra el
+   * mensaje de error del backend en un snackbar.
+   */
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

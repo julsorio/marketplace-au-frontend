@@ -32,6 +32,15 @@ const STATUS_LABELS: Record<string, string> = {
   draft: 'Borrador'
 };
 
+/**
+ * Pantalla de detalle de un anuncio: información completa, galería, chip de estado (ver
+ * `statusLabel`), acciones del dueño (editar/eliminar) y, para quien no es el dueño, contacto
+ * con el vendedor, favoritos, y los formularios de reserva/compra.
+ *
+ * No existe un endpoint "la transacción de este anuncio": la transacción relacionada (reserva o
+ * venta) se deriva filtrando `getSales()`/`getPurchases()` por `listingId`, mismo criterio que
+ * se usa para favoritos (ver `loadTransactionInfo`).
+ */
 @Component({
   selector: 'app-listing-detail',
   standalone: true,
@@ -70,10 +79,12 @@ export class ListingDetail implements OnInit {
   readonly selectedImageIndex = signal(0);
   readonly sellerProfile = signal<UserPublicProfile | null>(null);
 
-  // Transacción (reserva/venta) relacionada con este anuncio y con el usuario actual: si es
-  // el vendedor, la suya como vendedor; si es el comprador, la suya como comprador. No hay
-  // endpoint para "la transacción de este listing", así que se deriva filtrando
-  // getSales()/getPurchases() por listingId — igual criterio que usamos para favoritos.
+  /**
+   * Transacción (reserva/venta) relacionada con este anuncio y con el usuario actual: si es el
+   * vendedor, la suya como vendedor; si es el comprador, la suya como comprador. No hay
+   * endpoint para "la transacción de este listing", así que se deriva filtrando
+   * `getSales()`/`getPurchases()` por `listingId` — igual criterio que se usa para favoritos.
+   */
   readonly myTransaction = signal<TransactionResponse | null>(null);
   readonly buyerName = signal<string>('');
   readonly candidateBuyers = signal<{ id: string; name: string }[]>([]);
@@ -86,30 +97,40 @@ export class ListingDetail implements OnInit {
     paymentMethod: ['in_person', Validators.required]
   });
 
-  // Formulario de compra, para cuando es el propio comprador quien hace clic en "Comprar"
-  // (en vez de que sea el vendedor quien reserve la venta a su nombre).
+  /**
+   * Formulario de compra, para cuando es el propio comprador quien hace clic en "Comprar" (en
+   * vez de que sea el vendedor quien reserve la venta a su nombre).
+   */
   readonly showBuyForm = signal(false);
   readonly buyForm = this.fb.group({
     amount: [0, [Validators.required, Validators.min(0.01)]],
     paymentMethod: ['in_person', Validators.required]
   });
 
+  /** `true` si el usuario actual es el vendedor (dueño) del anuncio mostrado. */
   readonly isOwner = computed(() => {
     const currentUser = this.authService.currentUser();
     const currentListing = this.listing();
     return !!currentUser && !!currentListing && currentUser.id === currentListing.sellerId;
   });
 
+  /** Etiqueta en español del estado del anuncio, para el chip de estado ("Disponible", "Reservado", etc.). */
   readonly statusLabel = computed(() => {
     const l = this.listing();
     return l ? (STATUS_LABELS[l.status] ?? l.status) : '';
   });
 
+  /** Etiqueta en español del método de entrega del anuncio. */
   readonly deliveryMethodLabel = computed(() => {
     const l = this.listing();
     return l ? (DELIVERY_METHOD_LABELS[l.deliveryMethod] ?? l.deliveryMethod) : '';
   });
 
+  /**
+   * Carga el anuncio indicado en la ruta (`:id`), su vendedor y, si el anuncio ya no está
+   * disponible (reservado o vendido) y hay alguien identificado consultándolo, la transacción
+   * relacionada — solo entonces tiene sentido buscarla.
+   */
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
@@ -124,8 +145,6 @@ export class ListingDetail implements OnInit {
         this.isLoading.set(false);
         this.loadSellerProfile(result.sellerId);
 
-        // Solo tiene sentido buscar una transacción si el anuncio no está disponible (ya
-        // fue reservado o vendido) y hay alguien identificado consultándolo.
         if (result.status !== 'active' && this.authService.isAuthenticated()) {
           this.loadTransactionInfo(result);
         }
@@ -137,8 +156,12 @@ export class ListingDetail implements OnInit {
     });
   }
 
-  // Nombre y rating del vendedor, para que un comprador pueda hacerse una idea de su
-  // reputación antes de contactar o comprar. Se muestra con enlace a /users/:id.
+  /**
+   * Carga el nombre y rating del vendedor, para que un comprador pueda hacerse una idea de su
+   * reputación antes de contactar o comprar. Se muestra con enlace a `/users/:id`.
+   *
+   * @param sellerId Id del vendedor del anuncio.
+   */
   private loadSellerProfile(sellerId: string): void {
     this.userService.getPublicProfile(sellerId).subscribe({
       next: (profile) => this.sellerProfile.set(profile),
@@ -146,6 +169,13 @@ export class ListingDetail implements OnInit {
     });
   }
 
+  /**
+   * Busca la transacción relacionada con este anuncio y con el usuario actual, derivándola de
+   * `getSales()` (si el usuario es el vendedor) o `getPurchases()` (si es el comprador), ya que
+   * no existe un endpoint dedicado para obtenerla directamente.
+   *
+   * @param listing Anuncio ya cargado, cuyo `id` y `sellerId` se usan para filtrar.
+   */
   private loadTransactionInfo(listing: ListingResponse): void {
     const myId = this.authService.currentUser()?.id;
     if (!myId) return;
@@ -165,6 +195,12 @@ export class ListingDetail implements OnInit {
     });
   }
 
+  /**
+   * Fija la transacción relacionada con el anuncio y, si el usuario actual es el vendedor,
+   * resuelve también el nombre del comprador para mostrarlo en la pantalla.
+   *
+   * @param t Transacción a fijar, o `null` si no hay ninguna relacionada.
+   */
   private setTransaction(t: TransactionResponse | null): void {
     this.myTransaction.set(t);
 
@@ -176,16 +212,29 @@ export class ListingDetail implements OnInit {
     }
   }
 
+  /**
+   * Formatea el precio del anuncio como moneda localizada (en-AU).
+   *
+   * @returns El precio formateado, o cadena vacía si el anuncio aún no se ha cargado.
+   */
   formatPrice(): string {
     const l = this.listing();
     if (!l) return '';
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: l.currency }).format(l.price);
   }
 
+  /**
+   * Selecciona la imagen mostrada en la galería principal.
+   *
+   * @param index Índice de la imagen a mostrar dentro del array de imágenes del anuncio.
+   */
   selectImage(index: number): void {
     this.selectedImageIndex.set(index);
   }
 
+  /**
+   * Elimina el anuncio actual, previa confirmación del usuario, y vuelve al listado.
+   */
   onDelete(): void {
     const l = this.listing();
     if (!l) return;
@@ -203,6 +252,13 @@ export class ListingDetail implements OnInit {
     });
   }
 
+  /**
+   * Inicia (o continúa) una conversación con el vendedor del anuncio, exigiendo sesión
+   * iniciada.
+   *
+   * No hay conversación todavía en el caso general: se crea en el backend con el primer
+   * mensaje. `ConversationThread` lee `listingId`/`recipientId` de los query params en ese caso.
+   */
   onContactSeller(): void {
     if (!this.authService.isAuthenticated()) {
       const returnUrl = this.router.url;
@@ -216,13 +272,14 @@ export class ListingDetail implements OnInit {
     const l = this.listing();
     if (!l) return;
 
-    // No hay conversación todavía: se crea en el backend con el primer mensaje.
-    // ConversationThread lee listingId/recipientId de los query params en ese caso.
     this.router.navigate(['/conversations/new'], {
       queryParams: { listingId: l.id, recipientId: l.sellerId }
     });
   }
 
+  /**
+   * Alterna el estado de favorito del anuncio, exigiendo sesión iniciada.
+   */
   toggleFavorite(): void {
     const l = this.listing();
     if (!l) return;
@@ -239,10 +296,20 @@ export class ListingDetail implements OnInit {
     this.favoriteService.toggle(l.id);
   }
 
+  /**
+   * Formatea el importe de una transacción como moneda localizada (en-AU).
+   *
+   * @param t Transacción cuyo importe se quiere formatear.
+   * @returns El importe formateado como cadena de moneda.
+   */
   formatAmount(t: TransactionResponse): string {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: t.currency }).format(t.amount);
   }
 
+  /**
+   * Abre el formulario de reserva de venta (uso del vendedor) con los valores por defecto y
+   * carga los candidatos a comprador para ese anuncio.
+   */
   openReserveForm(): void {
     const l = this.listing();
     if (!l) return;
@@ -252,9 +319,14 @@ export class ListingDetail implements OnInit {
     this.loadCandidateBuyers(l.id);
   }
 
-  // Candidatos a comprador: gente con la que el vendedor ya ha hablado sobre este anuncio
-  // (no hay en la app ninguna otra forma de saber el id de un posible comprador). Si no hay
-  // conversaciones todavía, el campo de texto libre del formulario sigue disponible.
+  /**
+   * Obtiene los candidatos a comprador de este anuncio: la gente con la que el vendedor ya ha
+   * hablado sobre él, ya que no hay en la app ninguna otra forma de saber el id de un posible
+   * comprador. Si no hay conversaciones todavía, el campo de texto libre del formulario de
+   * reserva sigue disponible como alternativa.
+   *
+   * @param listingId Id del anuncio para el que se buscan candidatos a comprador.
+   */
   private loadCandidateBuyers(listingId: string): void {
     this.conversationService.getConversations().subscribe({
       next: (conversations) => {
@@ -279,10 +351,19 @@ export class ListingDetail implements OnInit {
     });
   }
 
+  /**
+   * Rellena el campo `buyerId` del formulario de reserva con el candidato a comprador elegido.
+   *
+   * @param id Id del candidato a comprador seleccionado.
+   */
   onSelectCandidateBuyer(id: string): void {
     this.reserveForm.controls.buyerId.setValue(id);
   }
 
+  /**
+   * Envía el formulario de reserva de venta: marca el anuncio como reservado a nombre del
+   * comprador elegido por el vendedor.
+   */
   onReserveSubmit(): void {
     const l = this.listing();
     if (!l || this.reserveForm.invalid) return;
@@ -308,6 +389,9 @@ export class ListingDetail implements OnInit {
       });
   }
 
+  /**
+   * Confirma la venta de la transacción reservada actual (uso del vendedor).
+   */
   onConfirmSale(): void {
     const transaction = this.myTransaction();
     if (!transaction) return;
@@ -328,6 +412,10 @@ export class ListingDetail implements OnInit {
     });
   }
 
+  /**
+   * Cancela la reserva actual, previa confirmación del usuario, y devuelve el anuncio a estado
+   * disponible.
+   */
   onCancelTransaction(): void {
     const transaction = this.myTransaction();
     if (!transaction) return;
@@ -348,6 +436,10 @@ export class ListingDetail implements OnInit {
     });
   }
 
+  /**
+   * Abre el formulario de compra (uso del comprador) con los valores por defecto, exigiendo
+   * sesión iniciada.
+   */
   openBuyForm(): void {
     const l = this.listing();
     if (!l) return;
@@ -365,6 +457,13 @@ export class ListingDetail implements OnInit {
     this.showBuyForm.set(true);
   }
 
+  /**
+   * Envía el formulario de compra: el propio comprador reserva la venta a su nombre.
+   *
+   * `buyerId` va a `myId` igualmente: si quien llama a `reserve()` no es el vendedor, el
+   * backend ya asume que el comprador es quien hace la petición e ignora este campo, pero el
+   * DTO sigue exigiendo que venga informado.
+   */
   onBuySubmit(): void {
     const l = this.listing();
     const myId = this.authService.currentUser()?.id;
@@ -373,9 +472,6 @@ export class ListingDetail implements OnInit {
     const { amount, paymentMethod } = this.buyForm.getRawValue();
     this.isProcessingTransaction.set(true);
 
-    // buyerId va a myId igualmente: si quien llama a reserve() no es el vendedor, el backend
-    // ya asume que el comprador es quien hace la petición e ignora este campo, pero el DTO
-    // sigue exigiendo que venga informado.
     this.transactionService
       .reserve({ listingId: l.id, buyerId: myId, amount: amount!, paymentMethod: paymentMethod! })
       .subscribe({

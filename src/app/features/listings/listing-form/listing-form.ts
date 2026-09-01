@@ -17,6 +17,13 @@ import { CategoryService } from '../../../core/services/category.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { LocationPicker, LocationPicked } from '../../../shared/components/location-picker/location-picker';
 
+/**
+ * Formulario de anuncio en modo crear/editar unificado: el mismo componente y el mismo
+ * `FormGroup` sirven para dar de alta un anuncio nuevo (sin `:id` en la ruta) y para editar uno
+ * existente (con `:id`); `isEditMode` decide qué endpoint se llama al enviar. Las imágenes se
+ * gestionan como un `FormArray` de URLs (una fila de texto por imagen), no como carga de
+ * ficheros.
+ */
 @Component({
   selector: 'app-listing-form',
   standalone: true,
@@ -51,6 +58,8 @@ export class ListingForm implements OnInit {
   readonly isLoading = signal(false);
   readonly isSubmitting = signal(false);
   readonly listingId = signal<string | null>(null);
+
+  /** `true` cuando la ruta trae `:id`: el formulario edita un anuncio existente en vez de crear uno nuevo. */
   readonly isEditMode = computed(() => this.listingId() !== null);
   readonly categories = this.categoryService.categories;
 
@@ -73,16 +82,23 @@ export class ListingForm implements OnInit {
   private readonly selectedCategoryId = toSignal(
     this.form.get('category')!.valueChanges, {initialValue: ''}
   )
-  
+
+  /** Subcategorías disponibles para la categoría actualmente seleccionada en el formulario. */
   readonly availableSubcategories = computed(() => {
     const categoryId = this.selectedCategoryId();
     return categoryId ? this.categoryService.getSubcategories(categoryId) : [];
   })
 
+  /** Acceso tipado al `FormArray` de URLs de imágenes del anuncio. */
   get imagesArray(): FormArray {
     return this.form.get('images') as FormArray;
   }
 
+  /**
+   * Prepara el formulario según el modo: en modo edición (hay `:id` en la ruta), desactiva la
+   * validación obligatoria de latitud/longitud (el anuncio ya tiene ubicación guardada y no se
+   * vuelve a pedir en el mapa) y carga los datos existentes del anuncio.
+   */
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     this.categoryService.loadCategories();
@@ -97,6 +113,12 @@ export class ListingForm implements OnInit {
     }
   }
 
+  /**
+   * Carga un anuncio existente y vuelca sus datos en el formulario, incluyendo una fila del
+   * `FormArray` de imágenes por cada URL ya guardada.
+   *
+   * @param id Id del anuncio a editar.
+   */
   private loadListing(id: string): void {
     this.isLoading.set(true);
     this.listingService.getById(id).subscribe({
@@ -123,17 +145,31 @@ export class ListingForm implements OnInit {
     });
   }
 
+  /**
+   * Añade una fila vacía al `FormArray` de imágenes.
+   */
   addImageField(): void {
     this.imagesArray.push(this.fb.control(''));
   }
 
+  /**
+   * Elimina una fila del `FormArray` de imágenes.
+   *
+   * @param index Posición de la imagen a eliminar dentro del array.
+   */
   removeImageField(index: number): void {
     this.imagesArray.removeAt(index);
   }
 
-  // Se dispara cuando el usuario busca una dirección, hace clic en el mapa o arrastra el pin
-  // dentro del <app-location-picker>. Solo autocompletamos suburbio/estado si el usuario aún
-  // no los ha escrito, para no pisar lo que haya introducido manualmente.
+  /**
+   * Vuelca en el formulario la ubicación elegida en el `<app-location-picker>`.
+   *
+   * Se dispara cuando el usuario busca una dirección, hace clic en el mapa o arrastra el pin.
+   * Solo se autocompletan suburbio/estado si el usuario aún no los ha escrito, para no pisar lo
+   * que haya introducido manualmente.
+   *
+   * @param location Coordenadas y, si están disponibles, suburbio/estado resueltos.
+   */
   onLocationPicked(location: LocationPicked): void {
     this.form.patchValue({
       latitude: location.latitude,
@@ -148,6 +184,10 @@ export class ListingForm implements OnInit {
     }
   }
 
+  /**
+   * Valida y envía el formulario, creando un anuncio nuevo o actualizando el existente según
+   * `isEditMode`. Las filas vacías del `FormArray` de imágenes se descartan antes de enviar.
+   */
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();

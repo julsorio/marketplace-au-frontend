@@ -34,6 +34,13 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelada'
 };
 
+/**
+ * Listado de transacciones del usuario, organizado en pestañas de Compras y Ventas.
+ *
+ * Cada transacción confirmada incluye un botón "Dejar reseña" cuya disponibilidad se decide en
+ * el cliente: no existe un endpoint "¿ya reseñé esto?", así que se deriva comprobando si ya hay
+ * una reseña mía a la otra parte para ese anuncio (ver `enrich()`).
+ */
 @Component({
   selector: 'app-transactions-list',
   standalone: true,
@@ -77,6 +84,10 @@ export class TransactionsList implements OnInit {
     comment: ['', Validators.maxLength(500)]
   });
 
+  /**
+   * Carga en paralelo las transacciones de la pestaña Compras (`getPurchases()`) y de la
+   * pestaña Ventas (`getSales()`), enriqueciendo cada lista por separado.
+   */
   ngOnInit(): void {
     this.transactionService.getPurchases().subscribe({
       next: (transactions) =>
@@ -97,12 +108,19 @@ export class TransactionsList implements OnInit {
     });
   }
 
-  // El endpoint de transacciones solo trae listingId; lo completamos con título/imagen del
-  // anuncio, mismo criterio que en ConversationList y FavoritesList. Para las confirmadas,
-  // además comprobamos si ya existe una reseña mía a la otra parte sobre este anuncio: no hay
-  // endpoint "¿ya reseñé esto?", así que se deriva de GET /reviews/user/{revieweeId} filtrando
-  // por reviewerId y listingId, mismo criterio de "reutilizar endpoints existentes" que ya
-  // usamos para favoritos y transacciones.
+  /**
+   * Completa cada transacción con el título/imagen del anuncio asociado (el endpoint de
+   * transacciones solo trae `listingId`, mismo criterio que en `ConversationList` y
+   * `FavoritesList`) y, para las confirmadas, con si ya existe una reseña mía a la otra parte
+   * sobre ese anuncio.
+   *
+   * No hay endpoint "¿ya reseñé esto?": se deriva llamando a `GET /reviews/user/{revieweeId}`
+   * y filtrando por `reviewerId` y `listingId`, siguiendo el mismo criterio de "reutilizar
+   * endpoints existentes" ya usado para favoritos y transacciones.
+   *
+   * @param transactions Transacciones (compras o ventas) a enriquecer.
+   * @returns Observable con las transacciones enriquecidas para la vista.
+   */
   private enrich(transactions: TransactionResponse[]): Observable<TransactionView[]> {
     if (transactions.length === 0) {
       return of([]);
@@ -140,25 +158,61 @@ export class TransactionsList implements OnInit {
     );
   }
 
+  /**
+   * Formatea el importe de una transacción como moneda localizada (en-AU).
+   *
+   * @param t Transacción cuyo importe se quiere formatear.
+   * @returns El importe formateado como cadena de moneda.
+   */
   formatAmount(t: TransactionResponse): string {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: t.currency }).format(t.amount);
   }
 
+  /**
+   * Traduce el estado interno de una transacción a su etiqueta legible en español.
+   *
+   * @param status Estado de la transacción tal como lo devuelve el backend.
+   * @returns La etiqueta correspondiente, o el propio `status` si no hay traducción registrada.
+   */
   statusLabel(status: string): string {
     return STATUS_LABELS[status] ?? status;
   }
 
+  /**
+   * Abre el formulario de reseña para una transacción, reiniciándolo a sus valores por defecto.
+   *
+   * @param view Transacción sobre la que se va a dejar reseña.
+   * @param event Evento de clic; se detiene su propagación para no interferir con otros
+   * manejadores de la fila.
+   */
   openReview(view: TransactionView, event: Event): void {
     event.stopPropagation();
     this.reviewForm.reset({ rating: 5, comment: '' });
     this.openReviewFor.set(view.transaction.id);
   }
 
+  /**
+   * Cierra el formulario de reseña sin enviarlo.
+   *
+   * @param event Evento de clic; se detiene su propagación para no interferir con otros
+   * manejadores de la fila.
+   */
   closeReview(event: Event): void {
     event.stopPropagation();
     this.openReviewFor.set(null);
   }
 
+  /**
+   * Envía la reseña del formulario abierto para una transacción.
+   *
+   * Si el backend responde 409 (ya existía una reseña, por ejemplo porque otra pestaña la
+   * publicó antes), se da la reseña por hecha en vez de dejar el formulario abierto para
+   * reintentar.
+   *
+   * @param view Transacción sobre la que se está dejando reseña.
+   * @param event Evento de clic; se detiene su propagación para no interferir con otros
+   * manejadores de la fila.
+   */
   submitReview(view: TransactionView, event: Event): void {
     event.stopPropagation();
     if (this.reviewForm.invalid) return;
@@ -194,6 +248,12 @@ export class TransactionsList implements OnInit {
       });
   }
 
+  /**
+   * Marca una transacción como ya reseñada en ambas listas (compras y ventas), actualizando el
+   * estado local sin necesidad de recargar desde el backend.
+   *
+   * @param transactionId Id de la transacción recién reseñada.
+   */
   private markReviewed(transactionId: string): void {
     const update = (views: TransactionView[]) =>
       views.map((v) => (v.transaction.id === transactionId ? { ...v, hasReviewed: true } : v));
