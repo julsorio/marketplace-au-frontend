@@ -1,0 +1,32 @@
+<h2 mat-dialog-title>Tu ubicación</h2>
+
+<mat-dialog-content>
+  <app-location-picker
+    [initialLatitude]="data?.latitude ?? null"
+    [initialLongitude]="data?.longitude ?? null"
+    [radiusKm]="location() ? radiusKm() : null"
+    (locationChange)="onLocationChange($event)" />
+
+  <div class="radius-row">
+    <span class="radius-label">Distancia</span>
+    <mat-slider
+      class="radius-slider"
+      [min]="minRadius"
+      [max]="maxRadius"
+      step="5"
+      discrete
+      [displayWith]="formatRadius"
+      [disabled]="!location()">
+      <input matSliderThumb [ngModel]="radiusKm()" (ngModelChange)="radiusKm.set($event)" />
+    </mat-slider>
+    <span class="radius-value">{{ radiusKm() }} km</span>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  @if (data) {
+    <button mat-button type="button" class="clear-button" (click)="clear()">Quitar ubicación</button>
+  }
+  <button mat-button type="button" mat-dialog-close>Cancelar</button>
+  <button mat-flat-button type="button" [disabled]="!canApply()" (click)="apply()">Aplicar</button>
+</mat-dialog-actions>
