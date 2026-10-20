@@ -1,0 +1,23 @@
+.radius-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.radius-label {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.radius-slider {
+  flex: 1;
+}
+
+.radius-value {
+  min-width: 56px;
+  text-align: right;
+  font-weight: 500;
+}
+
+.clear-button {
+  margin-right: auto;
+}

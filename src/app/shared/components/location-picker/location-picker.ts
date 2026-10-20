@@ -4,6 +4,7 @@ import {
   AfterViewInit,
   OnDestroy,
   ViewChild,
+  effect,
   inject,
   signal,
   input,
@@ -42,11 +43,15 @@ export interface LocationPicked {
 }
 
 const AUSTRALIA_CENTER: L.LatLngTuple = [-25.2744, 133.7751];
+const RADIUS_COLOR = '#1a73e8';
 
 /**
  * Selector de ubicación reutilizable: buscador de direcciones (geocoding con OSM/Nominatim
  * vía GeocodingService) + mapa Leaflet con un pin que se puede arrastrar o colocar con un clic
  * para ajustar la posición exacta.
+ *
+ * Si se le pasa `radiusKm`, además dibuja un círculo con ese radio alrededor del pin (lo usa
+ * el filtro de ubicación del listado para mostrar el área de búsqueda).
  */
 @Component({
   selector: 'app-location-picker',
@@ -68,6 +73,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
 
   readonly initialLatitude = input<number | null>(null);
   readonly initialLongitude = input<number | null>(null);
+  readonly radiusKm = input<number | null>(null);
   readonly locationChange = output<LocationPicked>();
 
   @ViewChild('mapContainer', { static: true })
@@ -80,6 +86,20 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
 
   private map!: L.Map;
   private marker: L.Marker | null = null;
+  private circle: L.Circle | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+
+  constructor() {
+    // Redibuja el círculo cuando cambia el radio (p. ej. al mover el slider). La primera
+    // ejecución llega antes de que exista el mapa; ese caso lo cubre ngAfterViewInit.
+    effect(() => {
+      const radius = this.radiusKm();
+      if (this.map) {
+        this.updateCircle(radius);
+        this.fitToCircle();
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
     const lat = this.initialLatitude();
@@ -98,7 +118,13 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
 
     if (hasInitial) {
       this.placeMarker(lat!, lng!, { emit: false });
+      this.fitToCircle();
     }
+
+    // Dentro de un diálogo el contenedor puede no tener su tamaño final al crear el mapa
+    // (animación de apertura); sin invalidateSize Leaflet deja tiles grises.
+    this.resizeObserver = new ResizeObserver(() => this.map.invalidateSize());
+    this.resizeObserver.observe(this.mapContainerRef.nativeElement);
 
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       this.selectedAddress.set(null);
@@ -107,6 +133,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
     this.map?.remove();
   }
 
@@ -136,6 +163,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
       suburb: result.suburb,
       state: result.state
     });
+    this.fitToCircle();
     this.selectedAddress.set(result.displayName);
     this.results.set([]);
     this.query.set('');
@@ -152,10 +180,12 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
       this.marker = L.marker([lat, lng], { draggable: true }).addTo(this.map);
       this.marker.on('dragend', () => {
         const pos = this.marker!.getLatLng();
+        this.circle?.setLatLng(pos);
         this.selectedAddress.set(null);
         this.locationChange.emit({ latitude: pos.lat, longitude: pos.lng });
       });
     }
+    this.updateCircle(this.radiusKm());
 
     if (opts.emit) {
       this.locationChange.emit({
@@ -164,6 +194,34 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
         suburb: opts.suburb,
         state: opts.state
       });
+    }
+  }
+
+  private updateCircle(radiusKm: number | null): void {
+    if (!this.marker || radiusKm == null) {
+      this.circle?.remove();
+      this.circle = null;
+      return;
+    }
+
+    const center = this.marker.getLatLng();
+    if (this.circle) {
+      this.circle.setLatLng(center);
+      this.circle.setRadius(radiusKm * 1000);
+    } else {
+      this.circle = L.circle(center, {
+        radius: radiusKm * 1000,
+        color: RADIUS_COLOR,
+        fillColor: RADIUS_COLOR,
+        fillOpacity: 0.12,
+        weight: 1
+      }).addTo(this.map);
+    }
+  }
+
+  private fitToCircle(): void {
+    if (this.circle) {
+      this.map.fitBounds(this.circle.getBounds(), { padding: [16, 16] });
     }
   }
 }

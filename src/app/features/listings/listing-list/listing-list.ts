@@ -12,20 +12,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { ListingService } from '../../../core/services/listing.service';
 import { ListingResponse, LISTING_CONDITIONS } from '../../../core/models/listing.model';
 import { CategoryService } from '../../../core/services/category.service';
-import { GeocodingService } from '../../../core/services/geocoding.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { FavoriteService } from '../../../core/services/favorite.service';
-
-interface ResolvedLocation {
-  latitude: number;
-  longitude: number;
-  label: string;
-}
-
-const RADIUS_OPTIONS = [5, 10, 25, 50, 100];
+import {
+  LocationFilter,
+  LocationFilterDialog,
+  LocationFilterDialogResult
+} from './location-filter-dialog/location-filter-dialog';
 
 @Component({
   selector: 'app-listing-list',
@@ -47,36 +44,34 @@ const RADIUS_OPTIONS = [5, 10, 25, 50, 100];
 })
 export class ListingList {
   private readonly listingService = inject(ListingService);
-  private readonly geocodingService = inject(GeocodingService);
   private readonly fb = inject(FormBuilder);
   private readonly categoryService = inject(CategoryService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly dialog = inject(MatDialog);
   readonly favoriteService = inject(FavoriteService);
 
   readonly conditions = LISTING_CONDITIONS;
-  readonly radiusOptions = RADIUS_OPTIONS;
 
   readonly listings = signal<ListingResponse[]>([]);
   readonly isLoading = signal(true);
-  readonly isGeocoding = signal(false);
-  readonly resolvedLocation = signal<ResolvedLocation | null>(null);
+  // Ubicación + radio elegidos en el popup de ubicación (fuera del formulario de filtros,
+  // porque no se escribe en un input sino que se elige en LocationFilterDialog).
+  readonly locationFilter = signal<LocationFilter | null>(null);
+  readonly locationDisplay = computed(() => {
+    const location = this.locationFilter();
+    return location ? `${location.label} · ${location.radiusKm} km` : '';
+  });
   readonly hasResults = computed(() => this.listings().length > 0);
   readonly categories = this.categoryService.categories;
-
-  // Guarda el último texto de ubicación ya geocodificado, para no repetir la llamada a
-  // Nominatim si el resto de filtros cambia pero la ubicación buscada sigue siendo la misma.
-  private lastGeocodedQuery = '';
 
   readonly filterForm = this.fb.group({
     query: [''],
     category: [''],
     condition: [''],
     minPrice: [null as number | null],
-    maxPrice: [null as number | null],
-    locationQuery: [''],
-    radiusKm: [25 as number | null]
+    maxPrice: [null as number | null]
   });
 
   constructor() {
@@ -92,54 +87,35 @@ export class ListingList {
       .subscribe(() => this.search());
   }
 
-  private search(): void {
-    const locationQuery = (this.filterForm.value.locationQuery ?? '').trim();
-
-    if (!locationQuery) {
-      this.resolvedLocation.set(null);
-      this.lastGeocodedQuery = '';
-      this.runSearch();
-      return;
-    }
-
-    if (locationQuery === this.lastGeocodedQuery && this.resolvedLocation()) {
-      this.runSearch();
-      return;
-    }
-
-    this.isGeocoding.set(true);
-    this.geocodingService.search(locationQuery).subscribe({
-      next: (results) => {
-        this.isGeocoding.set(false);
-        this.lastGeocodedQuery = locationQuery;
-
-        if (results.length === 0) {
-          this.resolvedLocation.set(null);
-          this.snackBar.open('No se encontró esa ubicación', 'Cerrar', { duration: 4000 });
-          this.runSearch();
+  openLocationDialog(): void {
+    this.dialog
+      .open<LocationFilterDialog, LocationFilter | null, LocationFilterDialogResult>(LocationFilterDialog, {
+        data: this.locationFilter(),
+        width: '640px',
+        maxWidth: '95vw',
+        autoFocus: false
+      })
+      .afterClosed()
+      .subscribe((result) => {
+        if (result === undefined) {
           return;
         }
-
-        const top = results[0];
-        this.resolvedLocation.set({
-          latitude: top.latitude,
-          longitude: top.longitude,
-          label: top.displayName
-        });
-        this.runSearch();
-      },
-      error: () => {
-        this.isGeocoding.set(false);
-        this.snackBar.open('No se pudo buscar esa ubicación', 'Cerrar', { duration: 4000 });
-        this.runSearch();
-      }
-    });
+        this.locationFilter.set(result === 'clear' ? null : result);
+        this.search();
+      });
   }
 
-  private runSearch(): void {
+  clearLocation(event: Event): void {
+    // Evita que el click en la X abra también el popup (el campo entero abre el diálogo).
+    event.stopPropagation();
+    this.locationFilter.set(null);
+    this.search();
+  }
+
+  private search(): void {
     this.isLoading.set(true);
     const filters = this.filterForm.value;
-    const location = this.resolvedLocation();
+    const location = this.locationFilter();
 
     this.listingService.search({
       query: filters.query || undefined,
@@ -149,7 +125,7 @@ export class ListingList {
       maxPrice: filters.maxPrice ?? undefined,
       latitude: location?.latitude,
       longitude: location?.longitude,
-      radiusKm: location ? (filters.radiusKm ?? undefined) : undefined
+      radiusKm: location?.radiusKm
     }).subscribe({
       next: (results) => {
         this.listings.set(results);

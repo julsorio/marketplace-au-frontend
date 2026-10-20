@@ -36,31 +36,23 @@
       <input matInput type="number" formControlName="maxPrice" />
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" class="location-field" (click)="openLocationDialog()">
       <mat-label>Ubicación</mat-label>
-      <input matInput formControlName="locationQuery" placeholder="Suburbio o dirección..." />
-      @if (isGeocoding()) {
-        <mat-spinner matSuffix diameter="18"></mat-spinner>
+      <input
+        matInput
+        readonly
+        [value]="locationDisplay()"
+        placeholder="Elige tu ubicación..."
+        (keydown.enter)="openLocationDialog()" />
+      @if (locationFilter()) {
+        <button mat-icon-button matSuffix type="button" aria-label="Quitar ubicación" (click)="clearLocation($event)">
+          <mat-icon>close</mat-icon>
+        </button>
       } @else {
         <mat-icon matSuffix>place</mat-icon>
       }
     </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Radio</mat-label>
-      <mat-select formControlName="radiusKm" [disabled]="!resolvedLocation()">
-        @for (r of radiusOptions; track r) {
-          <mat-option [value]="r">{{ r }} km</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
   </form>
-
-  @if (resolvedLocation()) {
-    <p class="resolved-location">
-      <mat-icon>place</mat-icon> Buscando cerca de: {{ resolvedLocation()!.label }}
-    </p>
-  }
 
   @if (isLoading()) {
     <div class="loading-container">
