@@ -30,6 +30,9 @@
                 <div class="transaction-info">
                   <p class="listing-title">{{ item.listingTitle }}</p>
                   <p class="amount">{{ formatAmount(item.transaction) }}</p>
+                  @if (item.transaction.trackingNumber) {
+                    <p class="tracking">Seguimiento: {{ item.transaction.trackingNumber }}</p>
+                  }
                 </div>
                 <mat-chip [class]="'status-chip status-' + item.transaction.status">
                   {{ statusLabel(item.transaction.status) }}
@@ -107,6 +110,9 @@
                 <div class="transaction-info">
                   <p class="listing-title">{{ item.listingTitle }}</p>
                   <p class="amount">{{ formatAmount(item.transaction) }}</p>
+                  @if (item.transaction.trackingNumber) {
+                    <p class="tracking">Seguimiento: {{ item.transaction.trackingNumber }}</p>
+                  }
                 </div>
                 <mat-chip [class]="'status-chip status-' + item.transaction.status">
                   {{ statusLabel(item.transaction.status) }}

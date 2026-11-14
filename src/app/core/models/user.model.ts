@@ -16,4 +16,5 @@ export interface UserPublicProfile {
   displayName: string;
   avatarUrl: string;
   rating: Rating;
+  acceptsCardPayments: boolean; // alta completada en Stripe Connect
 }

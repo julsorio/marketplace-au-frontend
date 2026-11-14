@@ -199,7 +199,40 @@
 
 .transaction-panel-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.deadline,
+.form-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.85rem;
+
+  mat-icon {
+    flex-shrink: 0;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.form-hint {
+  margin: 0 0 12px;
+}
+
+.tracking-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
 }
 
 .seller-info {

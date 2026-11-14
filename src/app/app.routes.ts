@@ -38,6 +38,12 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    // Alta de vendedores en Stripe Connect; Stripe redirige aquí al terminar (?onboarding=...)
+    path: 'payments/setup',
+    loadComponent: () => import('./features/payments/payment-setup/payment-setup').then(m => m.PaymentSetup),
+    canActivate: [authGuard]
+  },
+  {
     path: 'favorites',
     loadComponent: () => import('./features/favorites/favorites-list/favorites-list').then(m => m.FavoritesList),
     canActivate: [authGuard]
