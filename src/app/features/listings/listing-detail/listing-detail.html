@@ -97,6 +97,10 @@
             } @else {
               <form [formGroup]="reserveForm" (ngSubmit)="onReserveSubmit()" class="reserve-form">
                 <h4>Reservar venta</h4>
+                <p class="form-hint">
+                  Pago en efectivo y entrega en persona, por {{ formatPrice() }}. Si habéis acordado otro precio,
+                  edita el anuncio antes de reservar. Para pagar con tarjeta, el comprador usa "Comprar".
+                </p>
 
                 @if (candidateBuyers().length > 0) {
                   <mat-form-field appearance="outline">
@@ -114,19 +118,6 @@
                   <input matInput formControlName="buyerId" />
                 </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Importe acordado</mat-label>
-                  <input matInput type="number" step="0.01" formControlName="amount" />
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Método de pago</mat-label>
-                  <mat-select formControlName="paymentMethod">
-                    <mat-option value="in_person">En persona (efectivo)</mat-option>
-                    <mat-option value="card" disabled>Tarjeta (próximamente)</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
                 <div class="reserve-form-actions">
                   <button mat-button type="button" (click)="showReserveForm.set(false)">Cancelar</button>
                   <button
@@ -141,22 +132,96 @@
             }
           }
 
-          @if (l.status === 'reserved' && myTransaction(); as t) {
+          @if (myTransaction(); as t) {
             <div class="transaction-panel">
-              <p>
-                Reservado para <strong>{{ buyerName() || t.buyerId }}</strong> por {{ formatAmount(t) }}
-                ({{ t.paymentMethod === 'in_person' ? 'en persona' : 'tarjeta' }}).
-              </p>
-              <div class="transaction-panel-actions">
-                @if (t.paymentMethod === 'in_person') {
-                  <button mat-raised-button color="primary" (click)="onConfirmSale()" [disabled]="isProcessingTransaction()">
-                    Confirmar venta
-                  </button>
+              @switch (t.status) {
+                @case ('pending') {
+                  <p>Reservado para <strong>{{ buyerName() || t.buyerId }}</strong> por {{ formatAmount(t) }} (en persona).</p>
+                  <div class="transaction-panel-actions">
+                    <button mat-raised-button color="primary" (click)="onConfirmSale()" [disabled]="isProcessingTransaction()">
+                      Confirmar venta
+                    </button>
+                    <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                      Cancelar reserva
+                    </button>
+                  </div>
                 }
-                <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
-                  Cancelar reserva
-                </button>
-              </div>
+                @case ('awaiting_payment') {
+                  <p>
+                    <strong>{{ buyerName() || t.buyerId }}</strong> está pagando con tarjeta. Si no completa el pago antes
+                    de {{ formatDateTime(t.paymentExpiresAt) }}, el anuncio vuelve a estar disponible.
+                  </p>
+                  <div class="transaction-panel-actions">
+                    <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                      Cancelar reserva
+                    </button>
+                  </div>
+                }
+                @case ('awaiting_acceptance') {
+                  <p>
+                    <strong>{{ buyerName() || t.buyerId }}</strong> ha pagado {{ formatAmount(t) }} con tarjeta
+                    ({{ deliveryTypeLabels[t.deliveryType ?? 'in_person'] | lowercase }}). Recibirás {{ netAmount(t) }} tras la
+                    comisión de {{ formatAmount(t, t.platformFee) }}.
+                  </p>
+                  <p class="deadline">
+                    <mat-icon>schedule</mat-icon>
+                    Acepta o rechaza antes del {{ formatDateTime(t.acceptDeadline) }}; si no, la compra se cancela y se reembolsa.
+                  </p>
+                  <div class="transaction-panel-actions">
+                    <button mat-raised-button color="primary" (click)="onAcceptPurchase()" [disabled]="isProcessingTransaction()">
+                      Aceptar compra
+                    </button>
+                    <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                      Rechazar
+                    </button>
+                  </div>
+                }
+                @case ('accepted') {
+                  @if (t.deliveryType === 'shipping') {
+                    <p>Compra aceptada. Envía el artículo e introduce el número de seguimiento.</p>
+                    <p class="deadline">
+                      <mat-icon>schedule</mat-icon>
+                      Plazo de envío: {{ formatDateTime(t.shipDeadline) }}. Si no se envía, la compra se cancela y se reembolsa.
+                    </p>
+                    <div class="tracking-row">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Número de seguimiento</mat-label>
+                        <input matInput [formControl]="trackingNumber" />
+                      </mat-form-field>
+                      <button
+                        mat-raised-button
+                        color="primary"
+                        (click)="onShip()"
+                        [disabled]="trackingNumber.invalid || isProcessingTransaction()">
+                        Marcar como enviado
+                      </button>
+                    </div>
+                  } @else {
+                    <p>
+                      Compra aceptada. Entrega el artículo en mano a <strong>{{ buyerName() || t.buyerId }}</strong>. Recibirás
+                      {{ netAmount(t) }} cuando confirme la recepción, o automáticamente el {{ formatDateTime(t.autoConfirmAt) }}.
+                    </p>
+                  }
+                  <div class="transaction-panel-actions">
+                    <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                      Anular venta
+                    </button>
+                  </div>
+                }
+                @case ('shipped') {
+                  <p>
+                    Enviado con número de seguimiento <strong>{{ t.trackingNumber }}</strong>. Recibirás {{ netAmount(t) }}
+                    cuando el comprador confirme la recepción, o automáticamente el {{ formatDateTime(t.autoConfirmAt) }}.
+                  </p>
+                }
+                @case ('confirmed') {
+                  @if (t.paymentMethod === 'card') {
+                    <p>Venta completada. Se te han transferido {{ netAmount(t) }} (comisión {{ formatAmount(t, t.platformFee) }}).</p>
+                  } @else {
+                    <p>Venta confirmada por {{ formatAmount(t) }} (en persona).</p>
+                  }
+                }
+              }
             </div>
           }
         } @else {
@@ -174,20 +239,35 @@
                 </button>
               } @else {
                 <form [formGroup]="buyForm" (ngSubmit)="onBuySubmit()" class="reserve-form">
-                  <h4>Reservar compra</h4>
+                  <h4>Comprar por {{ formatPrice() }}</h4>
 
                   <mat-form-field appearance="outline">
-                    <mat-label>Importe que ofreces</mat-label>
-                    <input matInput type="number" step="0.01" formControlName="amount" />
+                    <mat-label>Entrega</mat-label>
+                    <mat-select formControlName="deliveryType">
+                      @for (option of deliveryOptions(); track option) {
+                        <mat-option [value]="option">{{ deliveryTypeLabels[option] }}</mat-option>
+                      }
+                    </mat-select>
                   </mat-form-field>
 
                   <mat-form-field appearance="outline">
                     <mat-label>Método de pago</mat-label>
                     <mat-select formControlName="paymentMethod">
-                      <mat-option value="in_person">En persona (efectivo)</mat-option>
-                      <mat-option value="card" disabled>Tarjeta (próximamente)</mat-option>
+                      <mat-option value="card" [disabled]="!cardAvailable()">Tarjeta</mat-option>
+                      <mat-option value="in_person" [disabled]="!cashAllowed()">Efectivo (al recoger)</mat-option>
                     </mat-select>
                   </mat-form-field>
+
+                  @if (!cardAvailable()) {
+                    <p class="form-hint">
+                      Este vendedor todavía no acepta pagos con tarjeta{{ cashAllowed() ? '' : ', y el envío solo se puede pagar con tarjeta' }}.
+                    </p>
+                  } @else {
+                    <p class="form-hint">
+                      <mat-icon>verified_user</mat-icon>
+                      Con tarjeta, el vendedor no cobra hasta que confirmes que has recibido el artículo.
+                    </p>
+                  }
 
                   <div class="reserve-form-actions">
                     <button mat-button type="button" (click)="showBuyForm.set(false)">Cancelar</button>
@@ -195,8 +275,8 @@
                       mat-raised-button
                       color="primary"
                       type="submit"
-                      [disabled]="buyForm.invalid || isProcessingTransaction()">
-                      Reservar compra
+                      [disabled]="buyForm.invalid || !canSubmitBuy() || isProcessingTransaction()">
+                      {{ buyFormPaysByCard() ? 'Continuar al pago' : 'Reservar compra' }}
                     </button>
                   </div>
                 </form>
@@ -206,14 +286,62 @@
 
           @if (myTransaction(); as t) {
             <div class="transaction-panel">
-              <p>
-                Has reservado este artículo por {{ formatAmount(t) }}.
-                {{ t.status === 'confirmed' ? 'Venta confirmada por el vendedor.' : 'En espera de que el vendedor confirme la venta en persona.' }}
-              </p>
-              @if (t.status === 'pending') {
-                <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
-                  Cancelar mi reserva
-                </button>
+              @switch (t.status) {
+                @case ('pending') {
+                  <p>Has reservado este artículo por {{ formatAmount(t) }}. En espera de que el vendedor confirme la venta en persona.</p>
+                  <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                    Cancelar mi reserva
+                  </button>
+                }
+                @case ('awaiting_payment') {
+                  <p>
+                    Reserva pendiente de pago ({{ formatAmount(t) }}). Completa el pago antes del
+                    {{ formatDateTime(t.paymentExpiresAt) }} o la reserva caducará.
+                  </p>
+                  <div class="transaction-panel-actions">
+                    <button mat-raised-button color="primary" (click)="openPaymentDialog()" [disabled]="isProcessingTransaction()">
+                      <mat-icon>credit_card</mat-icon>
+                      Pagar ahora
+                    </button>
+                    <button mat-stroked-button color="warn" (click)="onCancelTransaction()" [disabled]="isProcessingTransaction()">
+                      Cancelar
+                    </button>
+                  </div>
+                }
+                @case ('awaiting_acceptance') {
+                  <p>
+                    Pago de {{ formatAmount(t) }} realizado. El vendedor tiene hasta el {{ formatDateTime(t.acceptDeadline) }}
+                    para aceptar la compra; si no, se te devuelve el importe íntegro.
+                  </p>
+                }
+                @case ('accepted') {
+                  @if (t.deliveryType === 'shipping') {
+                    <p>
+                      El vendedor ha aceptado la compra y tiene hasta el {{ formatDateTime(t.shipDeadline) }} para enviarla.
+                      Si no la envía, se te devuelve el importe.
+                    </p>
+                  } @else {
+                    <p>
+                      El vendedor ha aceptado la compra. Quedad para la entrega y, cuando tengas el artículo, confirma la
+                      recepción para liberar el pago.
+                    </p>
+                    <button mat-raised-button color="primary" (click)="onConfirmReceipt()" [disabled]="isProcessingTransaction()">
+                      He recibido el artículo
+                    </button>
+                  }
+                }
+                @case ('shipped') {
+                  <p>
+                    Enviado con número de seguimiento <strong>{{ t.trackingNumber }}</strong>. Cuando lo recibas, confírmalo
+                    para liberar el pago (se confirmará solo el {{ formatDateTime(t.autoConfirmAt) }}).
+                  </p>
+                  <button mat-raised-button color="primary" (click)="onConfirmReceipt()" [disabled]="isProcessingTransaction()">
+                    He recibido el artículo
+                  </button>
+                }
+                @case ('confirmed') {
+                  <p>Compra completada por {{ formatAmount(t) }}.</p>
+                }
               }
             </div>
           }

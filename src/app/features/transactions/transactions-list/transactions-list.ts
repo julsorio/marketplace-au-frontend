@@ -18,7 +18,7 @@ import { TransactionService } from '../../../core/services/transaction.service';
 import { ListingService } from '../../../core/services/listing.service';
 import { ReviewService } from '../../../core/services/review.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { TransactionResponse } from '../../../core/models/transaction.model';
+import { TransactionResponse, TRANSACTION_STATUS_LABELS, TransactionStatus } from '../../../core/models/transaction.model';
 
 interface TransactionView {
   transaction: TransactionResponse;
@@ -27,12 +27,6 @@ interface TransactionView {
   revieweeId: string;
   hasReviewed: boolean;
 }
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmada',
-  cancelled: 'Cancelada'
-};
 
 @Component({
   selector: 'app-transactions-list',
@@ -144,8 +138,8 @@ export class TransactionsList implements OnInit {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: t.currency }).format(t.amount);
   }
 
-  statusLabel(status: string): string {
-    return STATUS_LABELS[status] ?? status;
+  statusLabel(status: TransactionStatus): string {
+    return TRANSACTION_STATUS_LABELS[status] ?? status;
   }
 
   openReview(view: TransactionView, event: Event): void {

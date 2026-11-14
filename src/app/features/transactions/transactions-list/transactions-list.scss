@@ -77,12 +77,26 @@
   font-weight: 600;
 }
 
+.tracking {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
 .status-chip {
   flex-shrink: 0;
 
-  &.status-pending {
+  &.status-pending,
+  &.status-awaiting_payment,
+  &.status-awaiting_acceptance {
     background-color: #fff3cd !important;
     color: #856404 !important;
+  }
+
+  &.status-accepted,
+  &.status-shipped {
+    background-color: #e3f2fd !important;
+    color: #0d47a1 !important;
   }
 
   &.status-confirmed {

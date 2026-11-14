@@ -1,0 +1,72 @@
+<div class="setup-page">
+  <button mat-button routerLink="/listings" class="back-button">
+    <mat-icon>arrow_back</mat-icon>
+    Volver al listado
+  </button>
+
+  <h1>Cobros con tarjeta</h1>
+
+  @if (isLoading() || isRedirecting()) {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      @if (isRedirecting()) {
+        <p>Abriendo el alta segura de Stripe…</p>
+      }
+    </div>
+  } @else if (loadError()) {
+    <p class="error">No se pudo consultar el estado de tus cobros. Inténtalo de nuevo más tarde.</p>
+  } @else if (status(); as s) {
+    <mat-card class="status-card">
+      <mat-card-content>
+        @if (s.payoutsEnabled) {
+          <p class="status ok">
+            <mat-icon>check_circle</mat-icon>
+            Ya puedes vender con pago con tarjeta.
+          </p>
+          <p>
+            Cuando el comprador confirme que ha recibido el artículo, te transferimos el importe menos la comisión
+            de la plataforma a tu cuenta bancaria.
+          </p>
+        } @else {
+          <p class="status">
+            <mat-icon>{{ s.hasAccount ? 'pending' : 'credit_card' }}</mat-icon>
+            {{ s.hasAccount ? 'Tu alta está incompleta o en revisión.' : 'Todavía no aceptas pagos con tarjeta.' }}
+          </p>
+          <p>
+            Para cobrar con tarjeta, completa un alta corta en Stripe, nuestro proveedor de pagos. No necesitas crear una
+            cuenta en stripe.com.
+          </p>
+
+          <!-- Aviso previo: el enlace de Stripe caduca en pocos minutos, mejor tenerlo todo a mano antes de empezar -->
+          <div class="checklist" role="note" aria-label="Qué necesitarás para el alta">
+            <p class="checklist-title">
+              <mat-icon>schedule</mat-icon>
+              Te llevará unos 3 minutos. Ten a mano:
+            </p>
+            <ul>
+              <li>
+                <mat-icon>account_balance</mat-icon>
+                Tu cuenta bancaria australiana (BSB y número de cuenta), donde recibirás el dinero.
+              </li>
+              <li>
+                <mat-icon>badge</mat-icon>
+                Tu nombre completo, fecha de nacimiento y dirección.
+              </li>
+              <li>
+                <mat-icon>smartphone</mat-icon>
+                Tu móvil, para recibir un código de verificación.
+              </li>
+            </ul>
+            <p class="checklist-hint">
+              Hazlo de una vez: si el enlace caduca, te enviaremos de nuevo a Stripe para continuar donde lo dejaste.
+            </p>
+          </div>
+
+          <button mat-raised-button color="primary" (click)="startOnboarding()">
+            {{ s.hasAccount ? 'Continuar el alta' : 'Activar cobros con tarjeta' }}
+          </button>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

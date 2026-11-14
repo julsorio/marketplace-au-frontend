@@ -1,0 +1,46 @@
+<h2 mat-dialog-title>Pagar con tarjeta</h2>
+
+<mat-dialog-content>
+  <p class="amount">Total: <strong>{{ formattedAmount }}</strong></p>
+
+  @if (state() === 'unavailable') {
+    <p class="notice">
+      <mat-icon>credit_card_off</mat-icon>
+      {{ errorMessage() ?? 'El pago con tarjeta no está disponible en este momento.' }}
+    </p>
+  } @else {
+    @if (state() === 'loading') {
+      <div class="loading"><mat-spinner diameter="32"></mat-spinner></div>
+    }
+
+    @if (state() === 'confirming') {
+      <div class="loading">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>Procesando el pago…</p>
+      </div>
+    }
+
+    <!-- Iframe de Stripe: los datos de la tarjeta no pasan por la app -->
+    <div #paymentElement class="payment-element" [class.hidden]="state() === 'loading' || state() === 'confirming'"></div>
+
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+
+    <p class="hint">
+      <mat-icon>lock</mat-icon>
+      El vendedor tiene 24 h para aceptar la compra. Si no la acepta, se te devuelve el importe.
+    </p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions>
+  <button mat-button type="button" (click)="close()" [disabled]="state() === 'paying' || state() === 'confirming'">
+    {{ state() === 'unavailable' ? 'Cerrar' : 'Pagar más tarde' }}
+  </button>
+  @if (state() !== 'unavailable') {
+    <button mat-flat-button type="button" (click)="pay()" [disabled]="state() !== 'ready'">
+      Pagar {{ formattedAmount }}
+    </button>
+  }
+</mat-dialog-actions>

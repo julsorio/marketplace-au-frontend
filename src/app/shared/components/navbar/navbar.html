@@ -41,6 +41,10 @@
       <div class="menu-user-info">
         {{ authService.currentUser()?.displayName }}
       </div>
+      <button mat-menu-item routerLink="/payments/setup">
+        <mat-icon>credit_card</mat-icon>
+        <span>Cobros con tarjeta</span>
+      </button>
       <button mat-menu-item (click)="onLogout()">
         <mat-icon>logout</mat-icon>
         <span>Cerrar sesión</span>
